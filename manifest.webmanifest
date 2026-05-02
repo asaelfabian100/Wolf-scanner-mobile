@@ -1,13 +1,15 @@
 {
   "name": "Wolf Scanner Mobile",
   "short_name": "Wolf Scanner",
-  "description": "PWA privada para capturar códigos UPC/EAN/GTIN desde iPhone y preparar datos para Wolf Inventory Agent.",
+  "description": "PWA privada para escanear UPC/EAN/GTIN desde iPhone y preparar inventario.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0f19",
-  "theme_color": "#111827",
   "orientation": "portrait",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "lang": "es-MX",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "./icon.svg",

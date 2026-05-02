@@ -1,71 +1,80 @@
 # Wolf Scanner Mobile
 
-**Versión inicial:** v1.0  
+**Versión actual:** v1.1  
 **Tipo:** PWA privada para iPhone  
 **Hosting recomendado:** GitHub Pages
 
-## 1. Nombre del proyecto
+## Qué problema resuelve
 
-**Wolf Scanner Mobile**
+Wolf Scanner Mobile permite capturar códigos **UPC/EAN/GTIN** desde la cámara del iPhone, acumularlos en una lista local y preparar la información para que **Wolf Inventory Agent** genere un CSV enriquecido para inventario.
 
-Repositorio sugerido:
+La app no intenta identificar productos ni completar datos comerciales. Su función es capturar códigos de forma rápida, ordenada y exportable.
 
-```text
-wolf-scanner-mobile
-```
+## Flujo de uso
 
-## 2. Qué problema resuelve
+1. Abrir la URL HTTPS publicada en GitHub Pages desde Safari en iPhone.
+2. Iniciar cámara.
+3. Escanear códigos UPC/EAN/GTIN.
+4. Revisar lista capturada.
+5. Ajustar cantidad o estado si aplica.
+6. Copiar listado o prompt para ChatGPT.
+7. Exportar CSV base para inventario.
+8. Procesar los códigos con Wolf Inventory Agent.
 
-Wolf Scanner Mobile permite capturar códigos **UPC/EAN/GTIN** de artículos coleccionables desde la cámara del iPhone, guardarlos temporalmente en una lista local y prepararlos para ser procesados después por **Wolf Inventory Agent**.
+## Funciones actuales
 
-El objetivo es evitar capturas manuales lentas, screenshots o registros uno por uno.
+- Escaneo de códigos UPC/EAN/GTIN usando cámara del iPhone.
+- Librería **ZXing Browser** cargada desde CDN.
+- Captura manual individual.
+- Captura manual masiva pegando varios códigos.
+- Prevención de duplicados.
+- Incremento automático de cantidad cuando un código duplicado se vuelve a capturar.
+- Contador de códigos únicos.
+- Contador de piezas totales.
+- Contador de duplicados.
+- Nombre de lote/sesión.
+- Fecha de sesión.
+- Modo de captura continuo o uno por uno.
+- Búsqueda dentro de la lista.
+- Ordenamiento por fecha, código o cantidad.
+- Edición rápida de cantidad.
+- Estado rápido: Nuevo, Sellado, Abierto, Usado.
+- Copiar listado de códigos, uno por línea.
+- Copiar prompt completo para ChatGPT.
+- Exportar CSV compatible con inventario.
+- Exportar TXT.
+- Compartir usando Web Share API cuando el navegador lo soporte.
+- Persistencia temporal con `localStorage`.
+- Service Worker básico para PWA.
+- Migración automática desde almacenamiento local de v1.0 si existe.
 
-## 3. Flujo de uso
+## Instalación en iPhone
 
-```text
-iPhone
-→ abrir Wolf Scanner Mobile
-→ escanear productos
-→ copiar listado de códigos
-→ pegarlo en ChatGPT
-→ Wolf Inventory Agent genera CSV enriquecido
-→ importar CSV al inventario principal
-```
-
-## 4. Funciones actuales
-
-- Abrir cámara desde Safari en iPhone.
-- Escanear códigos UPC/EAN/GTIN.
-- Guardar códigos capturados en una lista.
-- Evitar duplicados.
-- Contador de códigos capturados.
-- Contador de duplicados detectados.
-- Agregar código manualmente.
-- Copiar solo el listado de códigos, uno por línea.
-- Copiar prompt completo para ChatGPT:
-
-```text
-Wolf Inventory Agent: procesa estos EAN y genera CSV para inventario:
-[códigos aquí]
-```
-
-- Exportar CSV compatible con el inventario.
-- Guardar temporalmente datos en `localStorage`.
-- Limpiar lista con confirmación.
-- Soporte básico PWA.
-
-## 5. Instalación en iPhone
-
-1. Abrir la URL publicada de GitHub Pages desde **Safari**.
-2. Tocar el botón **Compartir**.
+1. Abrir la URL de GitHub Pages en Safari.
+2. Tocar el botón de compartir.
 3. Elegir **Agregar a pantalla de inicio**.
 4. Confirmar el nombre **Wolf Scanner**.
 5. Abrir la app desde el ícono creado.
 
-## 6. Publicación en GitHub Pages
+## Publicación en GitHub Pages
 
-1. Crear repositorio público en GitHub.
-2. Subir estos archivos a la raíz del repositorio:
+1. Entrar al repositorio `wolf-scanner-mobile`.
+2. Ir a **Settings**.
+3. Ir a **Pages**.
+4. En **Build and deployment**, seleccionar:
+   - Source: **Deploy from a branch**
+   - Branch: **main**
+   - Folder: **/ root**
+5. Guardar.
+6. Abrir la URL HTTPS generada por GitHub Pages.
+
+La URL tendrá una estructura parecida a:
+
+```text
+https://TU-USUARIO.github.io/wolf-scanner-mobile/
+```
+
+## Estructura de archivos
 
 ```text
 index.html
@@ -75,81 +84,99 @@ icon.svg
 README.md
 ```
 
-3. Entrar a **Settings**.
-4. Ir a **Pages**.
-5. En **Build and deployment**, seleccionar:
-
-```text
-Source: Deploy from a branch
-Branch: main
-Folder: /root
-```
-
-6. Guardar cambios.
-7. Esperar a que GitHub genere la URL HTTPS.
-
-## 7. Estructura de archivos
-
-```text
-wolf-scanner-mobile/
-├─ index.html
-├─ manifest.webmanifest
-├─ sw.js
-├─ icon.svg
-└─ README.md
-```
-
-## 8. Privacidad
+## Privacidad
 
 - La app no requiere login.
 - La app no envía códigos a una base de datos propia.
 - Los datos capturados se guardan localmente en el navegador mediante `localStorage`.
-- El usuario decide cuándo copiar o exportar los datos.
-- La versión actual carga ZXing Browser desde CDN.
-- Para máxima privacidad, una versión futura puede empaquetar ZXing localmente sin depender de CDN.
+- El usuario decide cuándo copiar, compartir o exportar los datos.
+- La librería ZXing se carga desde CDN en la versión actual.
+- Para máxima privacidad, una versión futura puede empaquetar ZXing localmente y eliminar la dependencia del CDN.
 
-## 9. Limitaciones conocidas
+## Limitaciones conocidas
 
-- La cámara en iPhone requiere abrir la app desde una URL segura **HTTPS**.
-- No se recomienda abrir el archivo localmente.
-- La librería de escaneo se carga desde CDN en la versión v1.0.
-- El soporte offline es parcial porque la librería externa depende de conexión al cargar por primera vez.
-- La app no identifica productos; solo captura códigos.
-- El enriquecimiento de datos se realiza después con ChatGPT y Wolf Inventory Agent.
+- La cámara en iPhone requiere HTTPS.
+- Safari puede pedir permisos de cámara cada cierto tiempo.
+- La linterna puede no estar disponible en todos los modelos o versiones de Safari.
+- El soporte offline depende del caché del navegador.
+- La primera carga requiere conexión para descargar ZXing desde CDN.
+- `localStorage` puede borrarse si el usuario limpia datos del navegador.
+- La app captura códigos; no identifica productos ni consulta catálogos.
 
-## 10. Roadmap futuro
+## Columnas CSV oficiales
 
-- Modo sesión/lote.
-- Nombre de lote de captura.
-- Fecha automática por sesión.
-- Exportación TXT además de CSV.
-- Edición de cantidad por código.
-- Campo de estado rápido: Nuevo, Sellado, Abierto, Usado.
+La exportación CSV usa estas columnas:
+
+```text
+UPC_EAN_GTIN
+DESCRIPCION_ORIGINAL
+CATEGORIA
+MARCA
+LINEA
+NOMBRE_ARTICULO
+NOMBRE_BUSQUEDA
+ESTADO
+CANTIDAD
+PRECIO_PAGADO
+FECHA_COMPRA
+LUGAR_COMPRA
+ASIN
+SKU_INTERNO
+URL_REFERENCIA
+BUSCAR_AUTOMATICO
+STATUS_CAPTURA
+NOTAS
+```
+
+## Reglas de llenado CSV
+
+- `UPC_EAN_GTIN`: código capturado.
+- `NOMBRE_BUSQUEDA`: mismo código capturado.
+- `ESTADO`: valor elegido por el usuario si existe.
+- `CANTIDAD`: cantidad capturada o ajustada.
+- `BUSCAR_AUTOMATICO`: `Si`.
+- `STATUS_CAPTURA`: `PENDIENTE`.
+- `NOTAS`: incluye lote, fecha de sesión y marca de captura.
+- El resto de columnas quedan vacías para enriquecimiento posterior.
+
+## Roadmap futuro
+
 - Historial de sesiones.
-- Botón para compartir por WhatsApp o copiar en portapapeles.
+- Exportación por lote histórico.
+- Edición avanzada por código.
+- Mejoras visuales tipo Wolf Collector.
 - Mejor soporte offline.
 - Versión autocontenida sin CDN.
-- Mejoras visuales tipo Wolf Collector.
+- Lectura optimizada por formato específico.
+- Importación desde CSV previo.
+- Respaldo manual JSON.
+- Restauración manual JSON.
 
-## 11. Historial de versiones
+## Historial de versiones
 
-### v1.0 — Base funcional PWA
+### v1.1
 
-**Título:** Wolf Scanner Mobile v1.0  
-**Summary:** Base funcional para escaneo UPC/EAN/GTIN desde iPhone.
+**Título:** Wolf Scanner Mobile v1.1 — Front reconstruido para captura por lote
+
+**Summary:** Mejora completa del front para hacerlo más útil en sesiones reales de captura desde iPhone.
 
 Cambios principales:
 
-- Se crea la estructura inicial del proyecto.
-- Se agrega interfaz móvil para Safari en iPhone.
-- Se integra ZXing Browser desde CDN.
-- Se agrega captura por cámara.
-- Se agrega captura manual.
-- Se agrega prevención de duplicados.
-- Se agrega copiado de listado.
-- Se agrega copiado de prompt para ChatGPT.
-- Se agrega exportación CSV compatible con inventario.
-- Se agrega persistencia temporal con `localStorage`.
-- Se agrega configuración inicial de PWA.
+- Rediseño visual completo.
+- Sesión/lote de captura.
+- Fecha de sesión.
+- Captura manual masiva.
+- Cantidad editable.
+- Estado rápido por código.
+- Búsqueda y ordenamiento.
+- Exportación TXT.
+- Compartir con Web Share API.
+- Intento de linterna cuando el navegador lo soporte.
+- Cambio de cámara cuando hay más de una disponible.
+- Migración local desde v1.0.
 
-**Riesgo:** Bajo/medio. La función de cámara depende de permisos del navegador, HTTPS y compatibilidad de Safari con la librería de escaneo.
+### v1.0
+
+**Título:** Wolf Scanner Mobile v1.0 — Base funcional
+
+**Summary:** Primera versión funcional para escaneo, lista local, copiado de prompt y exportación CSV.

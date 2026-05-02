@@ -1,7 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0b0f19"/>
-  <path d="M141 176l43-73 42 58 30-82 30 82 42-58 43 73-35 44 18 83-63 97-35-49-35 49-63-97 18-83-35-44z" fill="#111827" stroke="#38bdf8" stroke-width="18" stroke-linejoin="round"/>
-  <path d="M191 240l37 16-37 18zM321 240l-37 16 37 18z" fill="#f9fafb"/>
-  <path d="M224 316h64l-32 35z" fill="#38bdf8"/>
-  <path d="M128 406h256" stroke="#38bdf8" stroke-width="18" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Wolf Scanner Mobile icon">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="56" x2="444" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38bdf8"/>
+      <stop offset="0.45" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="116" y1="120" x2="404" y2="392" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#bae6fd"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M116 178l42-72 54 50 44-70 44 70 54-50 42 72-44 182-64-52-32 72-32-72-64 52-44-182z" fill="url(#mark)" opacity="0.96"/>
+  <path d="M175 214h54v34h-54v-34zm108 0h54v34h-54v-34z" fill="#020617" opacity="0.92"/>
+  <path d="M126 392h260" stroke="#38bdf8" stroke-width="22" stroke-linecap="round"/>
+  <path d="M152 392v-48m52 48v-78m52 78v-52m52 52v-92m52 92v-60" stroke="#020617" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
 </svg>
