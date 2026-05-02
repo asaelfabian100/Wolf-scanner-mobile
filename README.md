@@ -1,6 +1,6 @@
 # Wolf Inventory Control
 
-**Versión:** v1.3.0 — Inventory foundation  
+**Versión:** v1.3.1 — Entry UX polish  
 **Estatus:** MVP funcional cero pesos  
 **Hosting recomendado:** GitHub Pages  
 **Base central recomendada:** Firebase Firestore en Spark Plan
@@ -45,7 +45,7 @@ Colombia vende.
 El sistema registra movimientos auditables.
 ```
 
-## 4. Funciones actuales v1.3
+## 4. Funciones actuales v1.3.1
 
 - Login con Firebase Authentication.
 - Roles operativos:
@@ -66,6 +66,17 @@ El sistema registra movimientos auditables.
 - Captura manual de UPC/EAN/GTIN.
 - Soporte PWA básico.
 - Demo local para revisar interfaz sin Firebase.
+
+### Mejora v1.3.1
+
+- La sección **Entradas** deja de usar un textarea con valores mezclados.
+- Cada línea de entrada ahora tiene campos independientes para:
+  - Capturar UPC con cámara.
+  - UPC/EAN/GTIN almacenado.
+  - Cantidad esperada.
+  - Notas por línea.
+  - Editar/bloquear línea.
+- Se conserva la creación de órdenes de entrada desde México y la confirmación física desde Colombia.
 
 ## 5. Arquitectura cero pesos
 
@@ -276,3 +287,9 @@ inventory_movements = estado de cuenta
 
 - PWA privada para escaneo UPC/EAN/GTIN.
 - Exportación CSV y prompt para Wolf Inventory Agent.
+
+## Historial de versiones
+
+### v1.3.1 — Entry UX polish
+
+Pulido de la sección Entradas: captura por línea con campos independientes para UPC, cantidad y notas; botón de captura por cámara y botón de edición por línea.

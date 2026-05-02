@@ -1,4 +1,4 @@
-const CACHE_NAME = "wolf-inventory-control-v1.3.0";
+const CACHE_NAME = "wolf-inventory-control-v1.3.1";
 const APP_SHELL = [
   "./",
   "./index.html",
