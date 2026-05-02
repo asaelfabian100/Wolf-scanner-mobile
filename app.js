@@ -1,3 +1,12 @@
+const DEMO_USERS = [
+  {
+    email: "admin@wolf.com",
+    password: "admin123",
+    name: "Superadmin",
+    role: "Superadmin"
+  }
+];
+
 const state = {
   activeSection: "dashboard",
   nextOrderSequence: 1,
@@ -6,6 +15,7 @@ const state = {
     stream: null,
     frameRequest: null
   },
+  currentUser: null,
   entryDraft: {
     internalId: "",
     lines: []
@@ -23,9 +33,11 @@ const sectionMeta = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  initializeDraft();
+  bindAuth();
   bindNavigation();
   bindActions();
+  initializeDraft();
+  restoreSession();
   renderEntryLines();
   renderConfirmations();
   updateMetrics();
@@ -35,8 +47,74 @@ window.addEventListener("beforeunload", () => {
   stopScannerStream();
 });
 
+function bindAuth() {
+  document.getElementById("loginForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const password = document.getElementById("loginPassword").value;
+
+    const user = DEMO_USERS.find((item) => item.email === email && item.password === password);
+
+    if (!user) {
+      document.getElementById("loginError").hidden = false;
+      return;
+    }
+
+    document.getElementById("loginError").hidden = true;
+    setSession(user);
+  });
+}
+
+function setSession(user) {
+  state.currentUser = {
+    email: user.email,
+    name: user.name,
+    role: user.role
+  };
+
+  sessionStorage.setItem("wicSession", JSON.stringify(state.currentUser));
+
+  document.getElementById("currentUserName").textContent = state.currentUser.name;
+  document.getElementById("currentUserEmail").textContent = state.currentUser.email;
+
+  document.getElementById("loginView").hidden = true;
+  document.getElementById("appView").hidden = false;
+}
+
+function restoreSession() {
+  const saved = sessionStorage.getItem("wicSession");
+
+  if (!saved) {
+    document.getElementById("loginView").hidden = false;
+    document.getElementById("appView").hidden = true;
+    return;
+  }
+
+  try {
+    const user = JSON.parse(saved);
+    setSession(user);
+  } catch {
+    sessionStorage.removeItem("wicSession");
+    document.getElementById("loginView").hidden = false;
+    document.getElementById("appView").hidden = true;
+  }
+}
+
+function logout() {
+  closeInlineUPCScanner();
+  sessionStorage.removeItem("wicSession");
+  state.currentUser = null;
+
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginError").hidden = true;
+  document.getElementById("appView").hidden = true;
+  document.getElementById("loginView").hidden = false;
+  document.getElementById("loginEmail").focus();
+}
+
 function bindNavigation() {
-  document.querySelectorAll(".nav-item").forEach((button) => {
+  document.querySelectorAll(".nav-item[data-section]").forEach((button) => {
     button.addEventListener("click", () => {
       setActiveSection(button.dataset.section);
     });
@@ -68,9 +146,17 @@ function generateInternalFolio() {
   return `WIC-${y}${m}${d}-${seq}`;
 }
 
+function safeRandomId(prefix) {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return `${prefix}-${window.crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
 function createDraftLine() {
   return {
-    id: `draft-${crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random()}`,
+    id: safeRandomId("draft"),
     upc: "",
     expectedQty: ""
   };
@@ -84,7 +170,7 @@ function setActiveSection(section) {
     el.classList.toggle("active", el.id === section);
   });
 
-  document.querySelectorAll(".nav-item").forEach((el) => {
+  document.querySelectorAll(".nav-item[data-section]").forEach((el) => {
     el.classList.toggle("active", el.dataset.section === section);
   });
 
@@ -202,7 +288,7 @@ function captureEntryOrder() {
   const cleanLines = state.entryDraft.lines
     .filter((line) => String(line.upc).trim() || line.expectedQty !== "")
     .map((line) => ({
-      id: `confirm-${crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random()}`,
+      id: safeRandomId("confirm"),
       upc: String(line.upc).trim(),
       expectedQty: Number(line.expectedQty || 0),
       confirmedUpc: "",
@@ -304,7 +390,7 @@ function renderConfirmations() {
             </tr>
           </thead>
           <tbody>
-            ${order.lines.map((line) => renderConfirmationLine(order.id, line)).join("")}
+            ${order.lines.map((line) => renderConfirmationLine(line)).join("")}
           </tbody>
         </table>
       </div>
@@ -328,7 +414,9 @@ function renderConfirmations() {
   refreshAuthorizationButtons();
 }
 
-function renderConfirmationLine(orderId, line) {
+function renderConfirmationLine(line) {
+  const receivedUpcValue = line.confirmedUpc || line.upc;
+
   return `
     <tr data-confirmation-line="${line.id}">
       <td class="scan-cell">
@@ -338,7 +426,7 @@ function renderConfirmationLine(orderId, line) {
       </td>
       <td>
         <input
-          value="${escapeHtml(line.confirmedUpc || line.upc)}"
+          value="${escapeHtml(receivedUpcValue)}"
           inputmode="numeric"
           placeholder="UPC recibido"
           data-confirm-field="confirmedUpc"
@@ -609,11 +697,6 @@ function getStatusClass(status) {
   if (status === "Confirmado") return "done";
   if (status === "Diferencia") return "diff";
   return "pending";
-}
-
-function logout() {
-  closeInlineUPCScanner();
-  alert("Sesión cerrada. Aquí se conecta Firebase Auth signOut().");
 }
 
 function escapeHtml(value) {

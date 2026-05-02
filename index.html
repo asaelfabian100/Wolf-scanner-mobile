@@ -7,26 +7,92 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div id="app" class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">W</div>
+  <div id="loginView" class="login-view">
+    <section class="login-card">
+      <div class="login-brand">
+        <div class="brand-mark brand-mark--login">W</div>
         <div>
-          <h1>Wolf Inventory</h1>
-          <p>Control operativo</p>
+          <h1>Wolf Inventory Control</h1>
+          <p>Acceso operativo seguro</p>
         </div>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item active" data-section="dashboard">Dashboard</button>
-        <button class="nav-item" data-section="entradas">Entradas</button>
-        <button class="nav-item" data-section="confirmaciones">Confirmaciones de órdenes</button>
-        <button class="nav-item" data-section="inventario">Inventario</button>
-        <button class="nav-item" data-section="usuarios">Usuarios</button>
-        <button class="nav-item" data-section="configuracion">Configuración</button>
-      </nav>
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>Correo</span>
+          <input id="loginEmail" type="email" autocomplete="username" placeholder="usuario@empresa.com" required />
+        </label>
 
-      <button type="button" class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+        <label>
+          <span>Contraseña</span>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required />
+        </label>
+
+        <button type="submit" class="primary-btn full-width">Ingresar</button>
+
+        <p id="loginError" class="form-error" hidden>Correo o contraseña incorrectos.</p>
+      </form>
+
+      <div class="demo-access">
+        <strong>Acceso demo</strong>
+        <span>Correo: admin@wolf.com · Contraseña: admin123</span>
+      </div>
+    </section>
+  </div>
+
+  <div id="appView" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-mark">W</div>
+          <div>
+            <h1>Wolf Inventory</h1>
+            <p>Control operativo</p>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-item active" data-section="dashboard">
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-item" data-section="entradas">
+            <span class="nav-icon">↧</span>
+            <span>Entradas</span>
+          </button>
+          <button class="nav-item" data-section="confirmaciones">
+            <span class="nav-icon">✓</span>
+            <span>Confirmaciones de órdenes</span>
+          </button>
+          <button class="nav-item" data-section="inventario">
+            <span class="nav-icon">□</span>
+            <span>Inventario</span>
+          </button>
+          <button class="nav-item" data-section="usuarios">
+            <span class="nav-icon">◉</span>
+            <span>Usuarios</span>
+          </button>
+          <button class="nav-item" data-section="configuracion">
+            <span class="nav-icon">⚙</span>
+            <span>Configuración</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="session-card">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="currentUserName">Superadmin</strong>
+            <small id="currentUserEmail">admin@wolf.com</small>
+          </div>
+        </div>
+
+        <button type="button" class="nav-item nav-item--logout" id="logoutBtn">
+          <span class="nav-icon">↩</span>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
     </aside>
 
     <main class="main">
@@ -35,9 +101,8 @@
           <h2 id="sectionTitle">Dashboard</h2>
           <p id="sectionSubtitle">Resumen general del sistema</p>
         </div>
-        <div class="user-chip">
-          <span class="status-dot"></span>
-          Superadmin
+        <div class="topbar-actions">
+          <span class="environment-pill">Demo local</span>
         </div>
       </header>
 
@@ -57,6 +122,22 @@
             <span class="card-label">Diferencias</span>
             <strong id="metricDiffs">0</strong>
             <p>Solicitudes pendientes de autorización.</p>
+          </article>
+        </div>
+
+        <div class="panel-grid">
+          <article class="panel">
+            <h3>Flujo operativo</h3>
+            <ol class="flow-list">
+              <li><strong>México</strong> genera una orden en Entradas.</li>
+              <li>La orden viaja a <strong>Confirmaciones de órdenes</strong>.</li>
+              <li>Destino escanea, confirma cantidades y solicita autorización si hay diferencias.</li>
+            </ol>
+          </article>
+
+          <article class="panel">
+            <h3>Estado general</h3>
+            <p class="muted-text">La app conserva sesión activa hasta cerrar sesión. Al cerrar, vuelve a solicitar contraseña.</p>
           </article>
         </div>
       </section>
@@ -93,9 +174,15 @@
           </div>
         </div>
 
-        <div class="section-actions">
-          <button class="secondary-btn" id="addEntryLineBtn">Agregar línea</button>
-          <button class="primary-btn" id="captureEntryOrderBtn">Capturar entrada</button>
+        <div class="toolbar">
+          <div>
+            <strong>Líneas de producto</strong>
+            <span>Escanea UPCs y captura cantidades esperadas.</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="secondary-btn" id="addEntryLineBtn">Agregar línea</button>
+            <button class="primary-btn" id="captureEntryOrderBtn">Capturar entrada</button>
+          </div>
         </div>
 
         <div class="table-card">
@@ -134,7 +221,7 @@
 
         <div class="empty-state">
           <strong>Inventario listo para conectar.</strong>
-          <span>Esta sección queda preparada para el inventario operativo.</span>
+          <span>Esta sección queda preparada para existencias, ajustes y trazabilidad.</span>
         </div>
       </section>
 
@@ -202,6 +289,11 @@
               <option value="manual">Manual</option>
             </select>
           </label>
+
+          <div class="field-card">
+            <span>Autenticación</span>
+            <p class="muted-text">La demo local valida correo y contraseña. En producción debe conectarse a Firebase Auth.</p>
+          </div>
         </div>
       </section>
     </main>

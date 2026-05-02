@@ -1,4 +1,4 @@
-# Wolf Inventory Control — mejoras Entradas y Confirmaciones
+# Wolf Inventory Control — UX/Auth Fix
 
 ## Archivos incluidos
 
@@ -6,16 +6,26 @@
 - `styles.css`
 - `app.js`
 
-## Cambios aplicados
+## Correcciones principales
 
-- Se mantiene el menú lateral con Dashboard, Entradas, Confirmaciones de órdenes, Inventario, Usuarios y Configuración.
-- Se agrega botón **Cerrar sesión** en el menú lateral.
-- La sección **Entradas** queda enfocada en generar órdenes desde México.
-- La orden México, origen y destino se capturan una sola vez arriba.
-- Las líneas de Entradas solo incluyen Capturar UPC, UPC escaneado y Cantidad esperada.
-- Se elimina de Entradas: estado por línea, cantidad confirmada, notas y confirmar.
-- Se agrega botón general **Capturar entrada**.
-- Al capturar la entrada, la orden viaja a **Confirmaciones de órdenes**.
-- En Confirmaciones aparece orden, origen, destino, estado, capturar UPC, UPC recibido, cantidad esperada no editable, cantidad confirmada, notas y acciones.
-- Si la cantidad confirmada difiere de la esperada, aparece **Solicitar autorización**.
+- Se restaura pantalla de login con correo y contraseña.
+- Se agrega sesión local con `sessionStorage`.
+- Cerrar sesión ahora limpia la sesión y regresa al login.
+- Se rediseña Cerrar sesión para que haga sintonía con el menú lateral.
+- Se revisa UX general: espaciados, jerarquía visual, toolbar, cards, tablas y estados.
+- Se mantiene la estructura con menú lateral.
+- Se mantiene el flujo de Entradas y Confirmaciones de órdenes.
 - Se conserva el escáner UPC compacto dentro de la línea.
+
+## Acceso demo
+
+- Correo: `admin@wolf.com`
+- Contraseña: `admin123`
+
+## Nota de producción
+
+La autenticación incluida es demo local. En producción debe reemplazarse por Firebase Auth:
+
+- `signInWithEmailAndPassword(auth, email, password)`
+- `signOut(auth)`
+- `onAuthStateChanged(auth, callback)`
