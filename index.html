@@ -20,10 +20,13 @@
       <nav class="nav">
         <button class="nav-item active" data-section="dashboard">Dashboard</button>
         <button class="nav-item" data-section="entradas">Entradas</button>
+        <button class="nav-item" data-section="confirmaciones">Confirmaciones de órdenes</button>
         <button class="nav-item" data-section="inventario">Inventario</button>
         <button class="nav-item" data-section="usuarios">Usuarios</button>
         <button class="nav-item" data-section="configuracion">Configuración</button>
       </nav>
+
+      <button type="button" class="logout-btn" id="logoutBtn">Cerrar sesión</button>
     </aside>
 
     <main class="main">
@@ -41,19 +44,19 @@
       <section id="dashboard" class="section active">
         <div class="cards-grid">
           <article class="card">
-            <span class="card-label">Órdenes esperadas</span>
-            <strong id="metricOrders">3</strong>
-            <p>Entradas pendientes por confirmar.</p>
+            <span class="card-label">Órdenes creadas</span>
+            <strong id="metricOrders">0</strong>
+            <p>Órdenes de entrada generadas desde México.</p>
           </article>
           <article class="card">
             <span class="card-label">UPCs esperados</span>
-            <strong id="metricUpcs">7</strong>
-            <p>Total de SKUs/UPCs en proceso.</p>
+            <strong id="metricUpcs">0</strong>
+            <p>Total de líneas enviadas a confirmación.</p>
           </article>
           <article class="card">
             <span class="card-label">Diferencias</span>
             <strong id="metricDiffs">0</strong>
-            <p>Solicitudes pendientes de aprobación.</p>
+            <p>Solicitudes pendientes de autorización.</p>
           </article>
         </div>
       </section>
@@ -62,30 +65,63 @@
         <div class="section-header">
           <div>
             <h3>Entradas</h3>
-            <p>Confirma cantidades recibidas por orden, UPC y destino.</p>
+            <p>Genera órdenes de entrada desde México hacia el destino correspondiente.</p>
           </div>
-          <button class="primary-btn" id="addEntryLineBtn">Agregar línea</button>
+        </div>
+
+        <div class="form-card">
+          <div class="form-grid">
+            <label>
+              <span>Número de orden México</span>
+              <input id="entryOrderNumber" placeholder="Ej. MX-ENV-000123" />
+            </label>
+
+            <label>
+              <span>Origen</span>
+              <input id="entryOrigin" value="México" />
+            </label>
+
+            <label>
+              <span>Destino</span>
+              <input id="entryDestination" value="Colombia" />
+            </label>
+
+            <label>
+              <span>Folio interno</span>
+              <input id="entryInternalId" readonly />
+            </label>
+          </div>
+        </div>
+
+        <div class="section-actions">
+          <button class="secondary-btn" id="addEntryLineBtn">Agregar línea</button>
+          <button class="primary-btn" id="captureEntryOrderBtn">Capturar entrada</button>
         </div>
 
         <div class="table-card">
           <table class="data-table entradas-table">
             <thead>
               <tr>
-                <th>Orden</th>
-                <th>Origen</th>
-                <th>Destino</th>
-                <th>Estado</th>
                 <th>Captura UPC</th>
-                <th>UPC</th>
+                <th>UPC escaneado</th>
                 <th>Cantidad esperada</th>
-                <th>Cantidad confirmada</th>
-                <th>Notas</th>
-                <th>Acción</th>
+                <th>Eliminar</th>
               </tr>
             </thead>
-            <tbody id="entriesTableBody"></tbody>
+            <tbody id="entryLinesBody"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="confirmaciones" class="section">
+        <div class="section-header">
+          <div>
+            <h3>Confirmaciones de órdenes</h3>
+            <p>Confirma recepción por UPC contra las cantidades esperadas.</p>
+          </div>
+        </div>
+
+        <div id="confirmationsContainer" class="orders-stack"></div>
       </section>
 
       <section id="inventario" class="section">
@@ -98,7 +134,7 @@
 
         <div class="empty-state">
           <strong>Inventario listo para conectar.</strong>
-          <span>Esta sección conserva estructura sin afectar Entradas.</span>
+          <span>Esta sección queda preparada para el inventario operativo.</span>
         </div>
       </section>
 
@@ -131,9 +167,14 @@
                 <td>Usuarios, permisos, configuración crítica</td>
               </tr>
               <tr>
-                <td>Operador</td>
-                <td>Almacén</td>
-                <td>Captura de entradas, conteos y confirmaciones</td>
+                <td>Operador México</td>
+                <td>Origen</td>
+                <td>Generar órdenes de entrada y registrar cantidades esperadas</td>
+              </tr>
+              <tr>
+                <td>Operador Colombia</td>
+                <td>Destino</td>
+                <td>Confirmar recepción y solicitar autorización por diferencias</td>
               </tr>
               <tr>
                 <td>Auditor</td>
