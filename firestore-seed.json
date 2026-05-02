@@ -1,0 +1,58 @@
+{
+  "instructions": [
+    "Este archivo es una plantilla, no se sube automáticamente a Firebase.",
+    "Primero crea usuarios en Firebase Authentication.",
+    "Copia el UID de cada usuario.",
+    "En Firestore crea un documento users/{UID} con la estructura correspondiente.",
+    "El primer usuario super_admin se crea manualmente desde Firebase Console."
+  ],
+  "users": {
+    "UID_DEL_SUPER_ADMIN": {
+      "email": "tu-correo@dominio.com",
+      "display_name": "Wolf Admin",
+      "role": "super_admin",
+      "country": "MX",
+      "location": "México",
+      "active": true
+    },
+    "UID_DEL_ADMIN_MX": {
+      "email": "admin.mx@dominio.com",
+      "display_name": "Admin México",
+      "role": "mx_admin",
+      "country": "MX",
+      "location": "México",
+      "active": true
+    },
+    "UID_DEL_OPERADOR_CO": {
+      "email": "operador.co@dominio.com",
+      "display_name": "Operación Colombia",
+      "role": "co_operator",
+      "country": "CO",
+      "location": "Bogotá",
+      "active": true
+    },
+    "UID_DEL_VIEWER": {
+      "email": "viewer@dominio.com",
+      "display_name": "Consulta",
+      "role": "viewer",
+      "country": "MX",
+      "location": "México",
+      "active": true
+    }
+  },
+  "roles": [
+    "super_admin",
+    "mx_admin",
+    "co_operator",
+    "viewer"
+  ],
+  "collections": [
+    "users",
+    "products",
+    "entry_orders",
+    "sales_orders",
+    "inventory_stock",
+    "inventory_movements",
+    "scan_events"
+  ]
+}

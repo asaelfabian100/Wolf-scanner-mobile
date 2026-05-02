@@ -1,15 +1,13 @@
 {
-  "name": "Wolf Scanner Mobile",
-  "short_name": "Wolf Scanner",
-  "description": "PWA privada para escanear UPC/EAN/GTIN desde iPhone y preparar inventario.",
+  "name": "Wolf Inventory Control",
+  "short_name": "Wolf Control",
+  "description": "Sistema cero pesos para control de inventario, entradas, ventas y scanner operativo.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#07111f",
-  "theme_color": "#07111f",
-  "lang": "es-MX",
-  "categories": ["productivity", "utilities"],
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "./icon.svg",

@@ -1,80 +1,101 @@
-# Wolf Scanner Mobile
+# Wolf Inventory Control
 
-**Versión actual:** v1.1  
-**Tipo:** PWA privada para iPhone  
-**Hosting recomendado:** GitHub Pages
+**Versión:** v1.3.0 — Inventory foundation  
+**Estatus:** MVP funcional cero pesos  
+**Hosting recomendado:** GitHub Pages  
+**Base central recomendada:** Firebase Firestore en Spark Plan
 
-## Qué problema resuelve
+## 1. Qué problema resuelve
 
-Wolf Scanner Mobile permite capturar códigos **UPC/EAN/GTIN** desde la cámara del iPhone, acumularlos en una lista local y preparar la información para que **Wolf Inventory Agent** genere un CSV enriquecido para inventario.
+Wolf Inventory Control centraliza el control de inventario entre México y Colombia.
 
-La app no intenta identificar productos ni completar datos comerciales. Su función es capturar códigos de forma rápida, ordenada y exportable.
+La sede de México funciona como administración central: crea entradas esperadas, visualiza stock, revisa ventas y audita movimientos. Colombia funciona como operación física: confirma entradas, escanea productos, crea ventas y descuenta inventario.
 
-## Flujo de uso
+El scanner deja de ser el producto principal y pasa a ser una herramienta operativa dentro del módulo Colombia.
 
-1. Abrir la URL HTTPS publicada en GitHub Pages desde Safari en iPhone.
-2. Iniciar cámara.
-3. Escanear códigos UPC/EAN/GTIN.
-4. Revisar lista capturada.
-5. Ajustar cantidad o estado si aplica.
-6. Copiar listado o prompt para ChatGPT.
-7. Exportar CSV base para inventario.
-8. Procesar los códigos con Wolf Inventory Agent.
-
-## Funciones actuales
-
-- Escaneo de códigos UPC/EAN/GTIN usando cámara del iPhone.
-- Librería **ZXing Browser** cargada desde CDN.
-- Captura manual individual.
-- Captura manual masiva pegando varios códigos.
-- Prevención de duplicados.
-- Incremento automático de cantidad cuando un código duplicado se vuelve a capturar.
-- Contador de códigos únicos.
-- Contador de piezas totales.
-- Contador de duplicados.
-- Nombre de lote/sesión.
-- Fecha de sesión.
-- Modo de captura continuo o uno por uno.
-- Búsqueda dentro de la lista.
-- Ordenamiento por fecha, código o cantidad.
-- Edición rápida de cantidad.
-- Estado rápido: Nuevo, Sellado, Abierto, Usado.
-- Copiar listado de códigos, uno por línea.
-- Copiar prompt completo para ChatGPT.
-- Exportar CSV compatible con inventario.
-- Exportar TXT.
-- Compartir usando Web Share API cuando el navegador lo soporte.
-- Persistencia temporal con `localStorage`.
-- Service Worker básico para PWA.
-- Migración automática desde almacenamiento local de v1.0 si existe.
-
-## Instalación en iPhone
-
-1. Abrir la URL de GitHub Pages en Safari.
-2. Tocar el botón de compartir.
-3. Elegir **Agregar a pantalla de inicio**.
-4. Confirmar el nombre **Wolf Scanner**.
-5. Abrir la app desde el ícono creado.
-
-## Publicación en GitHub Pages
-
-1. Entrar al repositorio `wolf-scanner-mobile`.
-2. Ir a **Settings**.
-3. Ir a **Pages**.
-4. En **Build and deployment**, seleccionar:
-   - Source: **Deploy from a branch**
-   - Branch: **main**
-   - Folder: **/ root**
-5. Guardar.
-6. Abrir la URL HTTPS generada por GitHub Pages.
-
-La URL tendrá una estructura parecida a:
+## 2. Flujo operativo
 
 ```text
-https://TU-USUARIO.github.io/wolf-scanner-mobile/
+México Admin
+→ crea orden de entrada
+→ define productos y cantidades esperadas
+
+Colombia Operación
+→ recibe la entrada
+→ escanea o captura productos
+→ confirma cantidades reales
+→ sistema suma stock confirmado
+
+Colombia Operación
+→ crea venta
+→ escanea o captura productos vendidos
+→ confirma salida
+→ sistema descuenta stock
+
+México Admin
+→ visualiza stock, ventas, diferencias y movimientos
 ```
 
-## Estructura de archivos
+## 3. Regla central
+
+```text
+México crea intención documental.
+Colombia confirma realidad física.
+Colombia vende.
+El sistema registra movimientos auditables.
+```
+
+## 4. Funciones actuales v1.3
+
+- Login con Firebase Authentication.
+- Roles operativos:
+  - `super_admin`
+  - `mx_admin`
+  - `co_operator`
+  - `viewer`
+- Panel de dashboard.
+- Módulo México Admin.
+- Módulo Colombia Operación.
+- Creación de órdenes de entrada.
+- Confirmación de entradas desde Colombia.
+- Creación y confirmación de ventas desde Colombia.
+- Descuento de inventario por venta confirmada.
+- Stock centralizado en Firestore.
+- Movimientos auditables.
+- Scanner integrado como herramienta de evidencia.
+- Captura manual de UPC/EAN/GTIN.
+- Soporte PWA básico.
+- Demo local para revisar interfaz sin Firebase.
+
+## 5. Arquitectura cero pesos
+
+```text
+GitHub Pages
+→ publica la app web/PWA con HTTPS
+
+Firebase Authentication
+→ login por correo y contraseña
+
+Firebase Firestore Spark
+→ servidor flotante free / base central
+
+localStorage
+→ respaldo local/demo operativo
+```
+
+No usar en esta etapa:
+
+```text
+Firebase Blaze
+Cloud Functions
+SMS Auth
+Netlify
+Servidor propio
+Computadora 24/7
+Google Drive como base principal
+```
+
+## 6. Estructura de archivos
 
 ```text
 index.html
@@ -82,101 +103,176 @@ manifest.webmanifest
 sw.js
 icon.svg
 README.md
+firebase-config.js
+firestore.rules
+firestore-seed.json
 ```
 
-## Privacidad
+## 7. Configuración GitHub Pages
 
-- La app no requiere login.
-- La app no envía códigos a una base de datos propia.
-- Los datos capturados se guardan localmente en el navegador mediante `localStorage`.
-- El usuario decide cuándo copiar, compartir o exportar los datos.
-- La librería ZXing se carga desde CDN en la versión actual.
-- Para máxima privacidad, una versión futura puede empaquetar ZXing localmente y eliminar la dependencia del CDN.
+1. Sube todos los archivos a la raíz del repositorio.
+2. Ve a **Settings**.
+3. Entra a **Pages**.
+4. En **Build and deployment**, selecciona:
+   - Branch: `main`
+   - Folder: `/root`
+5. Guarda.
+6. Abre la URL HTTPS publicada por GitHub Pages.
 
-## Limitaciones conocidas
+## 8. Configuración Firebase cero pesos
 
-- La cámara en iPhone requiere HTTPS.
-- Safari puede pedir permisos de cámara cada cierto tiempo.
-- La linterna puede no estar disponible en todos los modelos o versiones de Safari.
-- El soporte offline depende del caché del navegador.
-- La primera carga requiere conexión para descargar ZXing desde CDN.
-- `localStorage` puede borrarse si el usuario limpia datos del navegador.
-- La app captura códigos; no identifica productos ni consulta catálogos.
+1. Entra a Firebase Console.
+2. Crea un proyecto nuevo.
+3. Mantén el proyecto en **Spark Plan**.
+4. No actives **Blaze**.
+5. No agregues método de pago.
+6. Activa **Authentication**.
+7. Habilita proveedor **Email/Password**.
+8. Crea usuarios desde Authentication.
+9. Copia el UID de cada usuario.
+10. Crea Firestore Database.
+11. Crea documentos en `users/{UID}` usando la plantilla `firestore-seed.json`.
+12. Pega las reglas de `firestore.rules` en Firestore Rules.
+13. Crea una Web App en Firebase.
+14. Copia la configuración en `firebase-config.js`.
+15. Sube `firebase-config.js` actualizado a GitHub.
 
-## Columnas CSV oficiales
+## 9. Roles
 
-La exportación CSV usa estas columnas:
+### `super_admin`
+
+Control maestro.
+
+Puede:
+
+- Ver todo.
+- Administrar perfiles.
+- Crear entradas.
+- Confirmar operaciones.
+- Ver stock y movimientos.
+
+### `mx_admin`
+
+Administración México.
+
+Puede:
+
+- Crear órdenes de entrada.
+- Ver stock Colombia.
+- Ver ventas Colombia.
+- Ver movimientos.
+
+No debe operar ventas ni confirmación física ordinaria.
+
+### `co_operator`
+
+Operación Colombia.
+
+Puede:
+
+- Confirmar entradas.
+- Crear ventas.
+- Confirmar salidas.
+- Escanear evidencia.
+- Ver stock operativo.
+
+### `viewer`
+
+Consulta.
+
+Puede:
+
+- Ver dashboard.
+- Ver stock.
+- Ver movimientos.
+
+No puede crear ni modificar operaciones.
+
+## 10. Modelo de datos
+
+Colecciones principales:
 
 ```text
-UPC_EAN_GTIN
-DESCRIPCION_ORIGINAL
-CATEGORIA
-MARCA
-LINEA
-NOMBRE_ARTICULO
-NOMBRE_BUSQUEDA
-ESTADO
-CANTIDAD
-PRECIO_PAGADO
-FECHA_COMPRA
-LUGAR_COMPRA
-ASIN
-SKU_INTERNO
-URL_REFERENCIA
-BUSCAR_AUTOMATICO
-STATUS_CAPTURA
-NOTAS
+users
+products
+entry_orders
+sales_orders
+inventory_stock
+inventory_movements
+scan_events
 ```
 
-## Reglas de llenado CSV
+### `inventory_stock`
 
-- `UPC_EAN_GTIN`: código capturado.
-- `NOMBRE_BUSQUEDA`: mismo código capturado.
-- `ESTADO`: valor elegido por el usuario si existe.
-- `CANTIDAD`: cantidad capturada o ajustada.
-- `BUSCAR_AUTOMATICO`: `Si`.
-- `STATUS_CAPTURA`: `PENDIENTE`.
-- `NOTAS`: incluye lote, fecha de sesión y marca de captura.
-- El resto de columnas quedan vacías para enriquecimiento posterior.
+Representa el saldo actual.
 
-## Roadmap futuro
+### `inventory_movements`
 
-- Historial de sesiones.
-- Exportación por lote histórico.
-- Edición avanzada por código.
-- Mejoras visuales tipo Wolf Collector.
-- Mejor soporte offline.
-- Versión autocontenida sin CDN.
-- Lectura optimizada por formato específico.
-- Importación desde CSV previo.
-- Respaldo manual JSON.
-- Restauración manual JSON.
+Representa la auditoría. No se borra.
 
-## Historial de versiones
+Regla:
 
-### v1.1
+```text
+inventory_stock = saldo
+inventory_movements = estado de cuenta
+```
 
-**Título:** Wolf Scanner Mobile v1.1 — Front reconstruido para captura por lote
+## 11. Privacidad
 
-**Summary:** Mejora completa del front para hacerlo más útil en sesiones reales de captura desde iPhone.
+- La app no requiere servidor propio.
+- La app usa Firebase Authentication para login.
+- La información se guarda en Firestore.
+- La cámara se usa desde el navegador del usuario.
+- Los escaneos quedan como evidencia operativa.
+- La librería ZXing se carga desde CDN en esta versión.
+- Para máxima privacidad futura, ZXing puede empaquetarse localmente.
 
-Cambios principales:
+## 12. Limitaciones conocidas
 
-- Rediseño visual completo.
-- Sesión/lote de captura.
-- Fecha de sesión.
-- Captura manual masiva.
-- Cantidad editable.
-- Estado rápido por código.
-- Búsqueda y ordenamiento.
-- Exportación TXT.
-- Compartir con Web Share API.
-- Intento de linterna cuando el navegador lo soporte.
-- Cambio de cámara cuando hay más de una disponible.
-- Migración local desde v1.0.
+- El MVP actual actualiza stock desde frontend usando Firestore Rules.
+- No usa Cloud Functions para mantener cero pesos.
+- No hay validación empresarial avanzada contra stock negativo.
+- El scanner depende de HTTPS y permisos de cámara.
+- La linterna y selección avanzada de cámara no están garantizadas en todos los navegadores.
+- Firebase Spark tiene cuotas gratuitas; si se exceden, el servicio puede limitarse.
 
-### v1.0
+## 13. Roadmap futuro
 
-**Título:** Wolf Scanner Mobile v1.0 — Base funcional
+- Validación fuerte de stock negativo.
+- Flujo de venta en borrador/reserva/surtida.
+- Ajustes autorizados con motivo obligatorio.
+- Catálogo maestro enriquecido con Wolf Inventory Agent.
+- Reportes por periodo.
+- Kardex por producto.
+- Diferencias por entrada.
+- Panel de auditoría.
+- Exportaciones CSV por módulo.
+- Modo offline con cola real de sincronización.
+- Separación futura de interfaces admin/operación si el volumen crece.
+- Empaquetar ZXing localmente.
 
-**Summary:** Primera versión funcional para escaneo, lista local, copiado de prompt y exportación CSV.
+## 14. Historial de versiones
+
+### v1.3.0 — Inventory foundation
+
+- Reconstrucción conceptual del proyecto como Wolf Inventory Control.
+- México Admin y Colombia Operación.
+- Login y roles.
+- Entradas, ventas, stock y movimientos.
+- Scanner integrado como herramienta.
+
+### v1.2.0 — Zero-cost sync foundation
+
+- Preparación de sincronización centralizada.
+- Concepto de servidor flotante free.
+- Firebase como base central.
+
+### v1.1.0 — Scanner batch UX
+
+- Mejoras al scanner móvil.
+- Lotes, cantidades, estados y exportaciones.
+
+### v1.0.0 — Scanner inicial
+
+- PWA privada para escaneo UPC/EAN/GTIN.
+- Exportación CSV y prompt para Wolf Inventory Agent.

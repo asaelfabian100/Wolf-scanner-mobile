@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function activeUser() {
+      return signedIn() && userProfile().active == true;
+    }
+
+    function role() {
+      return userProfile().role;
+    }
+
+    function isSuperAdmin() {
+      return activeUser() && role() == 'super_admin';
+    }
+
+    function isMxAdmin() {
+      return activeUser() && (role() == 'mx_admin' || role() == 'super_admin');
+    }
+
+    function isCoOperator() {
+      return activeUser() && (role() == 'co_operator' || role() == 'super_admin');
+    }
+
+    function isViewer() {
+      return activeUser() && role() == 'viewer';
+    }
+
+    function canReadOps() {
+      return activeUser() && role() in ['super_admin', 'mx_admin', 'co_operator', 'viewer'];
+    }
+
+    match /users/{userId} {
+      allow read: if activeUser() && (request.auth.uid == userId || role() in ['super_admin', 'mx_admin']);
+      allow create, update: if isSuperAdmin();
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if canReadOps();
+      allow create, update: if isMxAdmin();
+      allow delete: if false;
+    }
+
+    match /entry_orders/{entryOrderId} {
+      allow read: if canReadOps();
+      allow create: if isMxAdmin()
+        && request.resource.data.origin_country == 'MX'
+        && request.resource.data.destination_country == 'CO';
+      allow update: if activeUser() && (
+        isSuperAdmin()
+        || (role() == 'mx_admin' && resource.data.status in ['PENDIENTE_CONFIRMACION', 'DIFERENCIA'])
+        || (role() == 'co_operator' && request.resource.data.destination_country == 'CO')
+      );
+      allow delete: if false;
+    }
+
+    match /sales_orders/{salesOrderId} {
+      allow read: if canReadOps();
+      allow create: if isCoOperator()
+        && request.resource.data.country == 'CO';
+      allow update: if isCoOperator()
+        && resource.data.country == 'CO';
+      allow delete: if false;
+    }
+
+    match /inventory_stock/{stockId} {
+      allow read: if canReadOps();
+      allow create, update: if activeUser() && role() in ['super_admin', 'mx_admin', 'co_operator']
+        && request.resource.data.country == 'CO';
+      allow delete: if false;
+    }
+
+    match /inventory_movements/{movementId} {
+      allow read: if canReadOps();
+      allow create: if activeUser() && role() in ['super_admin', 'mx_admin', 'co_operator']
+        && request.resource.data.country == 'CO'
+        && request.resource.data.quantity_delta is number;
+      allow update, delete: if false;
+    }
+
+    match /scan_events/{scanId} {
+      allow read: if canReadOps();
+      allow create: if isCoOperator()
+        && request.resource.data.country == 'CO';
+      allow update, delete: if false;
+    }
+  }
+}

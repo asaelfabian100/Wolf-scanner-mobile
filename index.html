@@ -3,898 +3,251 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#07111f" />
+  <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Wolf Scanner" />
-  <meta name="description" content="PWA privada para capturar códigos UPC/EAN/GTIN desde iPhone y preparar inventario." />
-
-  <title>Wolf Scanner Mobile</title>
-
+  <meta name="apple-mobile-web-app-title" content="Wolf Control" />
+  <title>Wolf Inventory Control</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
-
   <style>
-    :root {
-      --bg: #07111f;
-      --bg-2: #0b1526;
-      --card: rgba(12, 23, 40, 0.92);
-      --card-2: #101f35;
-      --line: rgba(148, 163, 184, 0.22);
-      --text: #f8fafc;
-      --muted: #9ca3af;
-      --soft: #cbd5e1;
-      --primary: #38bdf8;
-      --primary-2: #0ea5e9;
-      --green: #22c55e;
-      --yellow: #f59e0b;
-      --red: #ef4444;
-      --shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
-      --radius: 22px;
-      --radius-sm: 15px;
-    }
-
-    * { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.22), transparent 30%),
-        radial-gradient(circle at 85% 8%, rgba(34, 197, 94, 0.14), transparent 25%),
-        linear-gradient(180deg, var(--bg), #030712 85%);
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: env(safe-area-inset-top) 14px calc(18px + env(safe-area-inset-bottom));
-    }
-
-    button, input, select, textarea { font: inherit; }
-
-    button {
-      border: 1px solid var(--line);
-      color: var(--text);
-      background: rgba(16, 31, 53, 0.96);
-      min-height: 48px;
-      border-radius: 15px;
-      padding: 0 14px;
-      font-weight: 850;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    button:active { transform: scale(0.985); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 15px;
-      background: rgba(2, 6, 23, 0.68);
-      color: var(--text);
-      outline: none;
-    }
-
-    input, select { min-height: 48px; padding: 0 14px; }
-    textarea { min-height: 110px; padding: 12px 14px; resize: vertical; line-height: 1.45; }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: rgba(56, 189, 248, 0.75);
-      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14);
-    }
-
-    .app { width: min(980px, 100%); margin: 0 auto; padding-top: 14px; }
-
-    header {
-      display: grid;
-      gap: 14px;
-      margin: 0 0 14px;
-    }
-
-    .hero {
-      border: 1px solid var(--line);
-      border-radius: calc(var(--radius) + 4px);
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(12, 23, 40, 0.82));
-      box-shadow: var(--shadow);
-      padding: 18px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -80px -100px auto;
-      width: 210px;
-      height: 210px;
-      background: rgba(56, 189, 248, 0.11);
-      border-radius: 999px;
-      filter: blur(8px);
-    }
-
-    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border: 1px solid rgba(56, 189, 248, 0.32);
-      background: rgba(56, 189, 248, 0.11);
-      color: #bae6fd;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: 850;
-      letter-spacing: 0.035em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    h1 { margin: 14px 0 8px; font-size: clamp(31px, 8vw, 52px); letter-spacing: -0.055em; line-height: 0.96; }
-    h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: -0.02em; }
-    h3 { margin: 0 0 8px; font-size: 15px; }
-    p { margin: 0; }
-    .subtitle { color: var(--soft); line-height: 1.48; max-width: 720px; }
-
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.22);
-      padding: 14px;
-      margin-bottom: 14px;
-      backdrop-filter: blur(12px);
-    }
-
-    .grid { display: grid; gap: 10px; }
-    .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
-
-    @media (min-width: 720px) {
-      .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; align-items: start; }
-    }
-
-    .primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #001827; border-color: rgba(56, 189, 248, 0.82); }
-    .success { background: rgba(34, 197, 94, 0.16); color: #bbf7d0; border-color: rgba(34, 197, 94, 0.4); }
-    .warning { background: rgba(245, 158, 11, 0.15); color: #fde68a; border-color: rgba(245, 158, 11, 0.42); }
-    .danger { background: rgba(239, 68, 68, 0.16); color: #fecaca; border-color: rgba(239, 68, 68, 0.42); }
-    .ghost { background: rgba(2, 6, 23, 0.35); }
-
-    .camera-box {
-      position: relative;
-      min-height: 320px;
-      border-radius: 19px;
-      border: 1px solid var(--line);
-      background: #020617;
-      overflow: hidden;
-    }
-
-    video { width: 100%; min-height: 320px; height: 52vh; max-height: 560px; display: block; object-fit: cover; background: #020617; }
-
-    .viewfinder {
-      pointer-events: none;
-      position: absolute;
-      inset: 17%;
-      border: 2px solid rgba(56, 189, 248, 0.92);
-      border-radius: 18px;
-      box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.34), inset 0 0 22px rgba(56, 189, 248, 0.08);
-    }
-
-    .viewfinder::before, .viewfinder::after {
-      content: "";
-      position: absolute;
-      left: 10%;
-      right: 10%;
-      height: 2px;
-      background: rgba(56, 189, 248, 0.92);
-      box-shadow: 0 0 18px rgba(56, 189, 248, 0.95);
-    }
-
-    .viewfinder::before { top: 50%; }
-    .viewfinder::after { top: calc(50% + 7px); opacity: 0.32; }
-
-    .camera-overlay {
-      position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      background: rgba(2, 6, 23, 0.78);
-      border-radius: 999px;
-      color: #e5e7eb;
-      font-size: 12px;
-      font-weight: 750;
-      padding: 7px 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.12); }
-    .dot.on { background: var(--green); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14); }
-    .dot.warn { background: var(--yellow); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.14); }
-    .dot.err { background: var(--red); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14); }
-
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    @media (min-width: 520px) { .stats { grid-template-columns: repeat(4, 1fr); } }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 17px;
-      padding: 13px;
-      background: rgba(2, 6, 23, 0.44);
-    }
-    .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 850; }
-    .stat-value { font-size: 25px; font-weight: 950; margin-top: 4px; letter-spacing: -0.04em; }
-
-    .hint { color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 8px; }
-    .status-line { color: var(--soft); font-size: 13px; line-height: 1.45; margin-top: 10px; }
-    .status-line strong { color: var(--text); }
-
-    .item-list { display: grid; gap: 9px; margin-top: 10px; }
-
-    .item {
-      border: 1px solid var(--line);
-      border-radius: 17px;
-      background: rgba(2, 6, 23, 0.5);
-      padding: 12px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .item-top {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: start;
-    }
-
-    .code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 17px;
-      font-weight: 850;
-      word-break: break-all;
-      letter-spacing: -0.02em;
-    }
-
-    .meta { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 4px; }
-
-    .item-actions { display: flex; gap: 7px; }
-    .mini-btn { min-height: 38px; width: auto; padding: 0 10px; border-radius: 12px; font-size: 13px; }
-
-    .item-fields { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 8px; }
-    .item-fields input, .item-fields select { min-height: 40px; border-radius: 12px; font-size: 14px; }
-    .item-fields label { display: grid; gap: 5px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 850; }
-
-    .empty {
-      border: 1px dashed rgba(148, 163, 184, 0.35);
-      border-radius: 17px;
-      padding: 18px;
-      color: var(--muted);
-      line-height: 1.5;
-      text-align: center;
-      background: rgba(2, 6, 23, 0.25);
-    }
-
-    .toolbar { display: grid; gap: 10px; margin-bottom: 10px; }
-
-    @media (min-width: 720px) {
-      .toolbar { grid-template-columns: 1fr 170px; }
-    }
-
-    .toast {
-      position: fixed;
-      left: 14px;
-      right: 14px;
-      bottom: calc(14px + env(safe-area-inset-bottom));
-      max-width: 850px;
-      margin: 0 auto;
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      border-radius: 17px;
-      background: rgba(2, 6, 23, 0.94);
-      color: var(--text);
-      padding: 13px 14px;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      transform: translateY(18px);
-      pointer-events: none;
-      transition: 0.18s ease;
-      z-index: 50;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
-
-    details {
-      border: 1px solid var(--line);
-      border-radius: 17px;
-      background: rgba(2, 6, 23, 0.32);
-      padding: 12px;
-    }
-    summary { cursor: pointer; font-weight: 850; }
-
-    footer { color: var(--muted); font-size: 12px; text-align: center; padding: 8px 0 0; line-height: 1.5; }
+    :root{--bg:#07111f;--panel:#0f172a;--panel2:#111827;--soft:#1f2937;--line:#334155;--text:#f8fafc;--muted:#94a3b8;--primary:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--radius:18px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 32%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button,input,select,textarea{border:1px solid var(--line);border-radius:14px;background:#020617;color:var(--text);min-height:44px;padding:10px 12px}button{font-weight:800;cursor:pointer;background:var(--soft)}button.primary{background:linear-gradient(135deg,var(--primary),#0284c7);color:#00111f;border-color:var(--primary)}button.ok{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);color:#bbf7d0}button.warn{background:rgba(245,158,11,.16);border-color:rgba(245,158,11,.4);color:#fde68a}button.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:#fecaca}button:disabled{opacity:.45;cursor:not-allowed}.app{max-width:1180px;margin:0 auto;padding:18px 14px 40px}.top{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}.brand h1{font-size:clamp(28px,6vw,44px);letter-spacing:-.04em;margin:8px 0 4px}.brand p{margin:0;color:var(--muted)}.pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.1);color:#bae6fd;border-radius:999px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.panel{background:rgba(15,23,42,.88);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 18px 42px rgba(0,0,0,.25)}.grid{display:grid;gap:10px}.grid.two{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.grid.three{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.grid.four{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.tab{white-space:nowrap}.active{outline:3px solid rgba(56,189,248,.24);border-color:var(--primary)}.hidden{display:none!important}.card{background:#020617;border:1px solid var(--line);border-radius:16px;padding:14px}.stat .label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:900}.stat .value{font-size:30px;font-weight:950;margin-top:4px}.muted{color:var(--muted)}.small{font-size:12px}.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:760px;background:#020617}th,td{text-align:left;padding:10px;border-bottom:1px solid #1e293b;font-size:13px;vertical-align:top}th{color:#cbd5e1;background:#0b1220;position:sticky;top:0}td code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.status{font-weight:900;border-radius:999px;padding:4px 8px;font-size:11px;display:inline-block}.s-pending{background:rgba(245,158,11,.18);color:#fde68a}.s-ok{background:rgba(34,197,94,.18);color:#bbf7d0}.s-bad{background:rgba(239,68,68,.16);color:#fecaca}.videoBox{position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--line);background:#020617;min-height:260px}video{width:100%;min-height:260px;object-fit:cover;display:block}.frame{pointer-events:none;position:absolute;inset:18%;border:2px solid var(--primary);border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.28)}.toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:860px;margin:auto;background:#020617;border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 18px 44px rgba(0,0,0,.35);opacity:0;transform:translateY(14px);transition:.2s;pointer-events:none;z-index:20}.toast.show{opacity:1;transform:translateY(0)}.dangerZone{border-color:rgba(239,68,68,.35)}a{color:#7dd3fc}.split{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}@media(max-width:850px){.split{grid-template-columns:1fr}.topActions{width:100%}}
   </style>
 </head>
-
 <body>
   <main class="app">
-    <header class="hero">
-      <div class="badge-row">
-        <span class="badge">Wolf Scanner Mobile</span>
-        <span class="badge">v1.1</span>
-        <span class="badge">GitHub Pages Ready</span>
+    <section class="top">
+      <div class="brand">
+        <span class="pill">v1.3 · Inventory foundation</span>
+        <h1>Wolf Inventory Control</h1>
+        <p>México administra. Colombia opera. El scanner es herramienta, no inventario.</p>
       </div>
-      <h1>Escanea. Acumula. Exporta.</h1>
-      <p class="subtitle">PWA privada para capturar códigos UPC/EAN/GTIN desde iPhone y preparar inventario para Wolf Inventory Agent sin inventar datos de producto.</p>
-    </header>
-
-    <section class="panel">
-      <div class="grid three">
-        <label>
-          <h3>Nombre de lote</h3>
-          <input id="sessionName" placeholder="Ej. Hot Wheels mayo" autocomplete="off" />
-        </label>
-        <label>
-          <h3>Fecha de sesión</h3>
-          <input id="sessionDate" type="date" />
-        </label>
-        <label>
-          <h3>Modo de captura</h3>
-          <select id="scanMode">
-            <option value="continuous">Continuo</option>
-            <option value="single">Uno por uno</option>
-          </select>
-        </label>
+      <div class="topActions grid" style="min-width:260px">
+        <button id="logoutBtn" class="bad hidden">Cerrar sesión</button>
+        <button id="syncBtn" class="ok hidden">Sincronizar ahora</button>
       </div>
-      <p class="hint">Tip: usa un lote por compra o sesión de captura. El lote se agrega en NOTAS del CSV.</p>
     </section>
 
-    <section class="stats panel">
-      <div class="stat"><div class="stat-label">Códigos</div><div class="stat-value" id="count">0</div></div>
-      <div class="stat"><div class="stat-label">Piezas</div><div class="stat-value" id="pieces">0</div></div>
-      <div class="stat"><div class="stat-label">Duplicados</div><div class="stat-value" id="duplicates">0</div></div>
-      <div class="stat"><div class="stat-label">Filtrados</div><div class="stat-value" id="filtered">0</div></div>
+    <section id="configWarning" class="panel hidden">
+      <h2>Firebase no configurado</h2>
+      <p class="muted">La app está cargada, pero todavía falta reemplazar los datos de <strong>firebase-config.js</strong>. Puedes revisar la interfaz, pero no habrá login real ni base central hasta configurar Firebase.</p>
     </section>
 
-    <div class="layout">
+    <section id="loginView" class="panel">
+      <h2>Acceso</h2>
+      <p class="muted">Usa correo y contraseña creados en Firebase Authentication. El rol real se valida en Firestore.</p>
+      <div class="grid two">
+        <input id="email" type="email" autocomplete="email" placeholder="correo@empresa.com" />
+        <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña" />
+      </div>
+      <div class="grid two" style="margin-top:10px">
+        <button id="loginBtn" class="primary">Entrar</button>
+        <button id="demoBtn">Ver demo local</button>
+      </div>
+      <p class="small muted">Demo local solo sirve para revisar pantallas; no sincroniza ni sustituye seguridad.</p>
+    </section>
+
+    <section id="appView" class="hidden">
       <section class="panel">
-        <h2>Cámara</h2>
-        <div class="camera-box">
-          <video id="video" muted playsinline></video>
-          <div class="viewfinder"></div>
-          <div class="camera-overlay">
-            <span class="pill"><span id="cameraDot" class="dot"></span><span id="cameraState">Cámara detenida</span></span>
-            <span class="pill" id="lastScan">Sin lectura reciente</span>
-          </div>
+        <div class="grid four">
+          <div class="card stat"><div class="label">Usuario</div><div class="value" id="userName">—</div><div class="muted small" id="userRole">—</div></div>
+          <div class="card stat"><div class="label">Stock total CO</div><div class="value" id="statStock">0</div><div class="muted small">Disponible registrado</div></div>
+          <div class="card stat"><div class="label">Entradas pendientes</div><div class="value" id="statEntries">0</div><div class="muted small">Por confirmar</div></div>
+          <div class="card stat"><div class="label">Ventas abiertas</div><div class="value" id="statSales">0</div><div class="muted small">Pendientes/surtidas</div></div>
         </div>
-        <p class="status-line" id="status">Estado: <strong>listo para abrir cámara</strong>.</p>
-        <div class="grid two" style="margin-top:10px;">
-          <button id="startBtn" class="primary">Abrir cámara</button>
-          <button id="stopBtn">Detener cámara</button>
-          <button id="switchCameraBtn" class="ghost">Cambiar cámara</button>
-          <button id="torchBtn" class="warning">Linterna</button>
-        </div>
-        <p class="hint">En iPhone debe abrirse desde HTTPS. Si la cámara no inicia, revisa permisos de Safari y recarga la página.</p>
       </section>
 
       <section class="panel">
-        <h2>Captura rápida</h2>
-        <div class="grid">
-          <input id="manualCode" inputmode="numeric" autocomplete="off" placeholder="Agregar código manual" />
-          <button id="addManualBtn" class="success">Agregar código</button>
-        </div>
-
-        <div style="height:12px"></div>
-
-        <details>
-          <summary>Agregar varios códigos</summary>
-          <div class="grid" style="margin-top:10px;">
-            <textarea id="bulkCodes" inputmode="numeric" placeholder="Pega códigos separados por salto de línea, coma o espacio"></textarea>
-            <button id="addBulkBtn" class="success">Agregar lote manual</button>
-          </div>
-        </details>
-
-        <div style="height:12px"></div>
-
-        <h2>Acciones</h2>
-        <div class="grid two">
-          <button id="copyListBtn">Copiar listado</button>
-          <button id="copyPromptBtn">Copiar prompt</button>
-          <button id="exportCsvBtn">Exportar CSV</button>
-          <button id="exportTxtBtn">Exportar TXT</button>
-          <button id="shareBtn">Compartir</button>
-          <button id="clearBtn" class="danger">Limpiar lista</button>
-        </div>
+        <div class="tabs" id="tabs"></div>
       </section>
-    </div>
 
-    <section class="panel">
-      <h2>Lista de captura</h2>
-      <div class="toolbar">
-        <input id="searchInput" placeholder="Buscar código" autocomplete="off" />
-        <select id="sortSelect">
-          <option value="newest">Más recientes</option>
-          <option value="oldest">Más antiguos</option>
-          <option value="codeAsc">Código A-Z</option>
-          <option value="qtyDesc">Cantidad mayor</option>
-        </select>
-      </div>
-      <div id="list" class="item-list"></div>
+      <section id="dashboardView" class="view panel"></section>
+      <section id="entriesView" class="view panel hidden"></section>
+      <section id="salesView" class="view panel hidden"></section>
+      <section id="stockView" class="view panel hidden"></section>
+      <section id="scannerView" class="view panel hidden"></section>
+      <section id="usersView" class="view panel hidden"></section>
     </section>
-
-    <footer>
-      Wolf Scanner Mobile · Datos locales en navegador · Sin login · Sin base de datos propia · ZXing Browser vía CDN
-    </footer>
   </main>
 
   <div id="toast" class="toast"></div>
-
   <script src="https://unpkg.com/@zxing/browser@latest"></script>
+  <script type="module">
+    import { firebaseConfig, isFirebaseConfigured } from "./firebase-config.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, serverTimestamp, query, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  <script>
-    const APP_VERSION = "1.1.0";
-    const STORAGE_KEY = "wolf_scanner_mobile_state_v2";
-    const LEGACY_CODES_KEY = "wolf_scanner_mobile_codes_v1";
-    const LEGACY_DUPLICATES_KEY = "wolf_scanner_mobile_duplicates_v1";
+    const APP_VERSION = "1.3.0";
+    const LS = "wolf_inventory_control_local_v13";
+    const $ = id => document.getElementById(id);
+    const state = { configured:isFirebaseConfigured(), auth:null, db:null, user:null, profile:null, demo:false, data:{entry_orders:[],sales_orders:[],inventory_stock:[],inventory_movements:[],users:[],scan_events:[]} };
+    let scannerControls = null;
 
-    const $ = (id) => document.getElementById(id);
-    const video = $("video");
-    const statusEl = $("status");
-    const cameraDot = $("cameraDot");
-    const cameraState = $("cameraState");
-    const lastScanEl = $("lastScan");
-    const toastEl = $("toast");
+    function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2600); }
+    function uid(){ return crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2); }
+    function nowISO(){ return new Date().toISOString(); }
+    function roleLabel(r){ return ({super_admin:"Super admin",mx_admin:"Admin México",co_operator:"Operación Colombia",viewer:"Viewer"}[r]||r||"—"); }
+    function canAdmin(){ return ["super_admin","mx_admin"].includes(state.profile?.role); }
+    function canOperateCO(){ return ["super_admin","co_operator"].includes(state.profile?.role); }
+    function canManageUsers(){ return state.profile?.role === "super_admin"; }
+    function normalizeCode(v){ return String(v||"").replace(/\D/g,"").trim(); }
+    function localLoad(){ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} }
+    function localSave(){ localStorage.setItem(LS, JSON.stringify({data:state.data, saved_at:nowISO()})); }
+    function profileName(){ return state.profile?.display_name || state.user?.email || "Demo"; }
 
-    const todayISO = () => new Date().toISOString().slice(0, 10);
-    const nowLabel = () => new Date().toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
-    const uid = () => crypto?.randomUUID?.() || String(Date.now() + Math.random());
+    if (!state.configured) $("configWarning").classList.remove("hidden");
+    if (state.configured) { const app = initializeApp(firebaseConfig); state.auth = getAuth(app); state.db = getFirestore(app); onAuthStateChanged(state.auth, async user => { if(user) await loadProfile(user); }); }
 
-    const csvHeaders = [
-      "UPC_EAN_GTIN", "DESCRIPCION_ORIGINAL", "CATEGORIA", "MARCA", "LINEA", "NOMBRE_ARTICULO",
-      "NOMBRE_BUSQUEDA", "ESTADO", "CANTIDAD", "PRECIO_PAGADO", "FECHA_COMPRA", "LUGAR_COMPRA",
-      "ASIN", "SKU_INTERNO", "URL_REFERENCIA", "BUSCAR_AUTOMATICO", "STATUS_CAPTURA", "NOTAS"
-    ];
+    $("loginBtn").onclick = async () => {
+      if(!state.configured){ toast("Primero configura firebase-config.js"); return; }
+      try { await signInWithEmailAndPassword(state.auth, $("email").value.trim(), $("password").value); }
+      catch(e){ console.error(e); toast("No se pudo iniciar sesión. Revisa usuario/contraseña."); }
+    };
+    $("demoBtn").onclick = () => startDemo();
+    $("logoutBtn").onclick = async () => { if(state.auth && !state.demo) await signOut(state.auth); location.reload(); };
+    $("syncBtn").onclick = () => refreshAll(true);
 
-    let state = loadState();
-    let codeReader = null;
-    let controls = null;
-    let devices = [];
-    let selectedDeviceId = undefined;
-    let lastRawScan = "";
-    let lastRawScanAt = 0;
-    let torchEnabled = false;
-
-    function normalizeCode(value) { return String(value || "").replace(/\D/g, "").trim(); }
-
-    function defaultState() {
-      return {
-        version: APP_VERSION,
-        sessionName: "",
-        sessionDate: todayISO(),
-        scanMode: "continuous",
-        duplicates: 0,
-        items: []
-      };
+    async function loadProfile(user){
+      try{
+        const snap = await getDoc(doc(state.db,"users",user.uid));
+        if(!snap.exists()){ toast("Usuario sin perfil en Firestore users/{uid}"); return; }
+        const profile = snap.data();
+        if(profile.active !== true){ toast("Usuario inactivo. Contacta al administrador."); return; }
+        state.user=user; state.profile={id:user.uid,...profile}; state.demo=false; await enterApp();
+      }catch(e){ console.error(e); toast("Error cargando perfil/rol."); }
     }
 
-    function loadState() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (saved && Array.isArray(saved.items)) return { ...defaultState(), ...saved };
-      } catch {}
+    function startDemo(){
+      const cached = localLoad();
+      state.demo=true; state.user={uid:"demo",email:"demo@local"}; state.profile={id:"demo",display_name:"Demo México",role:"super_admin",country:"MX",location:"México",active:true};
+      state.data = cached?.data || seedDemo(); enterApp();
+    }
+    function seedDemo(){ return { users:[], scan_events:[], inventory_movements:[], inventory_stock:[{id:"stock-demo",country:"CO",location:"Bogotá",upc_ean_gtin:"194735124763",available_qty:4,reserved_qty:0,updated_at:nowISO()}], entry_orders:[{id:"entry-demo",order_number:"ENT-DEMO-001",origin_country:"MX",destination_country:"CO",destination_location:"Bogotá",status:"PENDIENTE_CONFIRMACION",created_by:"Demo",created_at:nowISO(),items:[{upc_ean_gtin:"194735124763",expected_qty:6,confirmed_qty:0,difference_qty:0,status:"PENDIENTE"}],notes:"Orden demo"}], sales_orders:[]}; }
 
-      try {
-        const legacyCodes = JSON.parse(localStorage.getItem(LEGACY_CODES_KEY)) || [];
-        const legacyDuplicates = Number(localStorage.getItem(LEGACY_DUPLICATES_KEY) || "0");
-        if (legacyCodes.length) {
-          return {
-            ...defaultState(),
-            duplicates: legacyDuplicates,
-            items: legacyCodes.map(code => ({
-              id: uid(), code: normalizeCode(code), quantity: 1, status: "", createdAt: new Date().toISOString(), notes: "Migrado desde v1.0"
-            })).filter(item => item.code)
-          };
+    async function enterApp(){
+      $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("logoutBtn").classList.remove("hidden"); if(!state.demo) $("syncBtn").classList.remove("hidden");
+      $("userName").textContent = profileName(); $("userRole").textContent = roleLabel(state.profile.role);
+      setupTabs(); await refreshAll();
+    }
+
+    function setupTabs(){
+      const tabs = [{id:"dashboard",label:"Dashboard",show:true},{id:"entries",label:"Entradas",show:canAdmin()||canOperateCO()},{id:"sales",label:"Ventas",show:canOperateCO()||canAdmin()},{id:"stock",label:"Stock",show:true},{id:"scanner",label:"Scanner",show:canOperateCO()},{id:"users",label:"Usuarios",show:canManageUsers()}];
+      $("tabs").innerHTML=""; tabs.filter(t=>t.show).forEach((t,i)=>{ const b=document.createElement("button"); b.textContent=t.label; b.className="tab"+(i===0?" active":""); b.onclick=()=>showView(t.id,b); $("tabs").appendChild(b); }); showView("dashboard", $("tabs").querySelector("button"));
+    }
+    function showView(id,btn){ document.querySelectorAll(".view").forEach(v=>v.classList.add("hidden")); $(id+"View").classList.remove("hidden"); document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active")); if(btn)btn.classList.add("active"); render(); }
+
+    async function refreshAll(show=false){
+      if(state.demo){ render(); localSave(); return; }
+      try{
+        for(const c of ["entry_orders","sales_orders","inventory_stock","inventory_movements","users","scan_events"]){
+          const q = query(collection(state.db,c), orderBy("created_at","desc"), limit(c==="inventory_movements"?120:80));
+          const snap = await getDocs(q); state.data[c] = snap.docs.map(d=>({id:d.id,...d.data()}));
         }
-      } catch {}
-
-      return defaultState();
+        render(); if(show)toast("Datos sincronizados.");
+      }catch(e){ console.error(e); toast("No se pudo sincronizar."); }
     }
 
-    function saveState() {
-      state.version = APP_VERSION;
-      state.sessionName = $("sessionName").value.trim();
-      state.sessionDate = $("sessionDate").value || todayISO();
-      state.scanMode = $("scanMode").value;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      render();
+    function render(){ renderStats(); renderDashboard(); renderEntries(); renderSales(); renderStock(); renderScanner(); renderUsers(); }
+    function renderStats(){
+      const stockTotal = state.data.inventory_stock.reduce((a,s)=>a+Number(s.available_qty||0),0);
+      $("statStock").textContent=stockTotal; $("statEntries").textContent=state.data.entry_orders.filter(e=>e.status==="PENDIENTE_CONFIRMACION").length; $("statSales").textContent=state.data.sales_orders.filter(s=>!["CANCELADA","SURTIDA"].includes(s.status)).length;
+    }
+    function statusClass(s){ if(["CONFIRMADA","SURTIDA","SINCRONIZADO"].includes(s)) return "s-ok"; if(["CANCELADA","DIFERENCIA"].includes(s)) return "s-bad"; return "s-pending"; }
+    function table(rows, cols){ if(!rows.length) return '<div class="card muted">Sin registros todavía.</div>'; return `<div class="tableWrap"><table><thead><tr>${cols.map(c=>`<th>${c.h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c.f(r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`; }
+
+    function renderDashboard(){
+      $("dashboardView").innerHTML = `<h2>Dashboard</h2><p class="muted">Resumen operativo. México controla entradas y auditoría; Colombia confirma físico y ventas.</p><div class="grid three"><div class="card"><strong>Regla central</strong><p class="muted">México crea intención. Colombia confirma realidad física. Solo movimientos confirmados afectan stock.</p></div><div class="card"><strong>Últimos movimientos</strong><p class="muted">${state.data.inventory_movements.length} movimientos registrados.</p></div><div class="card"><strong>Modo actual</strong><p class="muted">${roleLabel(state.profile?.role)}</p></div></div>`;
     }
 
-    function showToast(message) {
-      toastEl.textContent = message;
-      toastEl.classList.add("show");
-      clearTimeout(showToast.timer);
-      showToast.timer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+    function renderEntries(){
+      let form="";
+      if(canAdmin()) form = `<div class="card"><h3>Crear orden de entrada desde México</h3><div class="grid two"><input id="entryLocation" placeholder="Destino en Colombia, ej. Bogotá" value="Bogotá"><input id="entryNotes" placeholder="Notas"></div><textarea id="entryItems" rows="5" placeholder="Un producto por línea: UPC,cantidad\n194735124763,6"></textarea><button class="primary" id="createEntryBtn">Crear entrada esperada</button></div>`;
+      const rows = state.data.entry_orders;
+      $("entriesView").innerHTML = `<h2>Entradas</h2><p class="muted">México crea órdenes; Colombia confirma físicamente.</p>${form}${table(rows,[{h:"Orden",f:r=>r.order_number||r.id},{h:"Destino",f:r=>`${r.destination_country||"CO"} · ${r.destination_location||"—"}`},{h:"Estado",f:r=>`<span class="status ${statusClass(r.status)}">${r.status}</span>`},{h:"Items",f:r=>(r.items||[]).map(i=>`<code>${i.upc_ean_gtin}</code> · esp ${i.expected_qty} · conf ${i.confirmed_qty||0}`).join("<br>")},{h:"Acción",f:r=> canOperateCO()&&r.status==="PENDIENTE_CONFIRMACION"?`<button onclick="window.confirmEntry('${r.id}')" class="ok">Confirmar</button>`:"—"}])}`;
+      if(canAdmin()) $("createEntryBtn").onclick=createEntry;
     }
 
-    function setStatus(message, type = "idle") {
-      statusEl.innerHTML = `Estado: <strong>${message}</strong>.`;
-      cameraDot.className = `dot ${type === "on" ? "on" : type === "warn" ? "warn" : type === "err" ? "err" : ""}`;
-      cameraState.textContent = type === "on" ? "Cámara activa" : type === "warn" ? "Revisar cámara" : type === "err" ? "Error de cámara" : "Cámara detenida";
+    async function createEntry(){
+      const lines = $("entryItems").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+      const items = lines.map(line=>{ const [code,qty] = line.split(/[;,\t ]+/); return { upc_ean_gtin:normalizeCode(code), expected_qty:Number(qty||1), confirmed_qty:0, difference_qty:0, status:"PENDIENTE"}; }).filter(i=>i.upc_ean_gtin);
+      if(!items.length){ toast("Agrega al menos un item."); return; }
+      const entry = { order_number:`ENT-${Date.now()}`, origin_country:"MX", destination_country:"CO", destination_location:$("entryLocation").value||"Colombia", status:"PENDIENTE_CONFIRMACION", created_by:profileName(), created_by_uid:state.user.uid, created_at:nowISO(), notes:$("entryNotes").value||"", items };
+      if(state.demo){ entry.id=uid(); state.data.entry_orders.unshift(entry); localSave(); render(); toast("Entrada demo creada."); return; }
+      await addDoc(collection(state.db,"entry_orders"), {...entry, created_at:serverTimestamp()}); await refreshAll(true);
     }
 
-    function beep() {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const context = new AudioCtx();
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.value = 880;
-        gain.gain.value = 0.035;
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        setTimeout(() => { oscillator.stop(); context.close(); }, 90);
-      } catch {}
+    window.confirmEntry = async id => {
+      const entry = state.data.entry_orders.find(e=>e.id===id); if(!entry) return;
+      const confirmed = entry.items.map(i=>({ ...i, confirmed_qty:Number(prompt(`Cantidad recibida para ${i.upc_ean_gtin}`, i.expected_qty)||0) }));
+      confirmed.forEach(i=>{ i.difference_qty = Number(i.confirmed_qty)-Number(i.expected_qty); i.status = i.difference_qty===0 ? "CONFIRMADO" : "DIFERENCIA"; });
+      const hasDiff = confirmed.some(i=>i.difference_qty!==0); const status = hasDiff ? "DIFERENCIA" : "CONFIRMADA";
+      if(state.demo){ entry.items=confirmed; entry.status=status; applyStockAndMovements(confirmed,"ENTRY_CONFIRMED",entry.order_number); localSave(); render(); toast("Entrada confirmada en demo."); return; }
+      await updateDoc(doc(state.db,"entry_orders",id),{items:confirmed,status,confirmed_by:profileName(),confirmed_by_uid:state.user.uid,confirmed_at:serverTimestamp()});
+      for(const item of confirmed){ if(Number(item.confirmed_qty)>0) await writeMovementAndStock(item.upc_ean_gtin, Number(item.confirmed_qty), "ENTRY_CONFIRMED", entry.order_number, "Entrada confirmada Colombia"); }
+      await refreshAll(true);
+    };
+
+    function renderSales(){
+      let form="";
+      if(canOperateCO()) form = `<div class="card"><h3>Crear venta desde Colombia</h3><div class="grid two"><input id="saleCustomer" placeholder="Referencia cliente / pedido"><input id="saleNotes" placeholder="Notas"></div><textarea id="saleItems" rows="5" placeholder="Un producto por línea: UPC,cantidad\n194735124763,1"></textarea><button class="primary" id="createSaleBtn">Crear y confirmar venta</button></div>`;
+      $("salesView").innerHTML = `<h2>Ventas</h2><p class="muted">Solo Colombia genera ventas. Una venta confirmada descuenta stock.</p>${form}${table(state.data.sales_orders,[{h:"Venta",f:r=>r.order_number||r.id},{h:"Cliente/ref",f:r=>r.customer_reference||"—"},{h:"Estado",f:r=>`<span class="status ${statusClass(r.status)}">${r.status}</span>`},{h:"Items",f:r=>(r.items||[]).map(i=>`<code>${i.upc_ean_gtin}</code> · ${i.qty}`).join("<br>")},{h:"Creó",f:r=>r.created_by||"—"}])}`;
+      if(canOperateCO()) $("createSaleBtn").onclick=createSale;
     }
 
-    function feedback() {
-      if (navigator.vibrate) navigator.vibrate(70);
-      beep();
+    async function createSale(){
+      const lines = $("saleItems").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+      const items = lines.map(line=>{ const [code,qty] = line.split(/[;,\t ]+/); return { upc_ean_gtin:normalizeCode(code), qty:Number(qty||1), status:"CONFIRMADO"}; }).filter(i=>i.upc_ean_gtin);
+      if(!items.length){ toast("Agrega al menos un item."); return; }
+      const sale = { order_number:`VEN-${Date.now()}`, country:"CO", location:state.profile.location||"Colombia", status:"SURTIDA", customer_reference:$("saleCustomer").value||"", created_by:profileName(), created_by_uid:state.user.uid, created_at:nowISO(), confirmed_at:nowISO(), notes:$("saleNotes").value||"", items };
+      if(state.demo){ sale.id=uid(); state.data.sales_orders.unshift(sale); applyStockAndMovements(items.map(i=>({upc_ean_gtin:i.upc_ean_gtin,confirmed_qty:-Math.abs(i.qty)})),"SALE_CONFIRMED",sale.order_number); localSave(); render(); toast("Venta demo creada."); return; }
+      await addDoc(collection(state.db,"sales_orders"), {...sale, created_at:serverTimestamp(), confirmed_at:serverTimestamp()});
+      for(const item of items){ await writeMovementAndStock(item.upc_ean_gtin, -Math.abs(Number(item.qty)), "SALE_CONFIRMED", sale.order_number, "Venta confirmada Colombia"); }
+      await refreshAll(true);
     }
 
-    function addCode(rawCode, source = "manual") {
-      const code = normalizeCode(rawCode);
-      if (!code) return showToast("Código vacío o inválido."), false;
-      if (code.length < 8) return showToast("El código parece demasiado corto."), false;
-
-      const existing = state.items.find(item => item.code === code);
-      if (existing) {
-        state.duplicates += 1;
-        existing.quantity = Number(existing.quantity || 1) + 1;
-        existing.updatedAt = new Date().toISOString();
-        saveState();
-        showToast(`Duplicado: ${code}. Cantidad actualizada.`);
-        feedback();
-        return false;
-      }
-
-      state.items.unshift({ id: uid(), code, quantity: 1, status: "", createdAt: new Date().toISOString(), notes: "" });
-      saveState();
-      lastScanEl.textContent = `Último: ${code}`;
-      showToast(source === "scan" ? `Escaneado: ${code}` : `Agregado: ${code}`);
-      feedback();
-      return true;
+    function renderStock(){
+      $("stockView").innerHTML = `<h2>Stock Colombia</h2><p class="muted">Saldo actual. El historial vive en movimientos.</p>${table(state.data.inventory_stock,[{h:"Código",f:r=>`<code>${r.upc_ean_gtin}</code>`},{h:"País",f:r=>r.country||"CO"},{h:"Ubicación",f:r=>r.location||"—"},{h:"Disponible",f:r=>r.available_qty??0},{h:"Reservado",f:r=>r.reserved_qty??0}])}<h3>Movimientos recientes</h3>${table(state.data.inventory_movements.slice(0,30),[{h:"Tipo",f:r=>r.movement_type},{h:"Código",f:r=>`<code>${r.upc_ean_gtin}</code>`},{h:"Delta",f:r=>r.quantity_delta},{h:"Ref",f:r=>`${r.reference_type||"—"} ${r.reference_id||""}`},{h:"Usuario",f:r=>r.created_by||"—"}])}`;
     }
 
-    function addBulkCodes(text) {
-      const matches = String(text || "").match(/\d{8,14}/g) || [];
-      if (!matches.length) return showToast("No encontré códigos válidos."), 0;
-      let added = 0;
-      for (const code of matches) if (addCode(code, "bulk")) added += 1;
-      showToast(`Lote procesado. Nuevos: ${added}.`);
-      return added;
+    function renderScanner(){
+      $("scannerView").innerHTML = `<h2>Scanner operativo Colombia</h2><p class="muted">Herramienta para capturar evidencia. El escaneo no mueve stock por sí solo.</p><div class="split"><div><div class="videoBox"><video id="video" muted playsinline></video><div class="frame"></div></div><div class="grid two" style="margin-top:10px"><button class="primary" id="startScanBtn">Abrir cámara</button><button id="stopScanBtn">Detener</button></div></div><div class="card"><h3>Captura manual / evidencia</h3><select id="scanModule"><option value="ENTRY_CONFIRMATION">Confirmación entrada</option><option value="SALE_EXIT">Salida venta</option><option value="AUDIT">Auditoría física</option></select><input id="manualScan" inputmode="numeric" placeholder="UPC/EAN/GTIN"><input id="scanRef" placeholder="Referencia orden opcional"><button class="ok" id="saveScanBtn">Guardar evidencia</button><div id="scanList" class="muted small" style="margin-top:10px"></div></div></div>`;
+      $("startScanBtn").onclick=startScanner; $("stopScanBtn").onclick=stopScanner; $("saveScanBtn").onclick=()=>saveScan($("manualScan").value,"manual"); renderScanList();
+    }
+    function renderScanList(){ const el=$("scanList"); if(!el)return; el.innerHTML = state.data.scan_events.slice(0,10).map(s=>`<div><code>${s.upc_ean_gtin}</code> · ${s.module||"—"} · ${s.operator_name||"—"}</div>`).join("") || "Sin evidencias recientes."; }
+    async function startScanner(){
+      if(!window.ZXingBrowser){toast("ZXing no cargó.");return} const video=$("video");
+      try{ const reader=new ZXingBrowser.BrowserMultiFormatReader(); scannerControls = await reader.decodeFromVideoDevice(undefined, video, result=>{ if(result) saveScan(result.getText(),"camera"); }); toast("Cámara activa."); }catch(e){ console.error(e); toast("No se pudo abrir cámara. Revisa HTTPS/permisos."); }
+    }
+    function stopScanner(){ if(scannerControls){scannerControls.stop();scannerControls=null;toast("Cámara detenida.");} }
+    async function saveScan(raw,source){
+      const code=normalizeCode(raw); if(!code){toast("Código inválido.");return}
+      const ev={ country:"CO", location:state.profile.location||"Colombia", operator_name:profileName(), operator_uid:state.user.uid, module:$("scanModule")?.value||"AUDIT", reference_id:$("scanRef")?.value||"", upc_ean_gtin:code, source, scanned_at:nowISO(), app_version:APP_VERSION, created_at:nowISO() };
+      if(state.demo){ ev.id=uid(); state.data.scan_events.unshift(ev); localSave(); renderScanList(); toast("Evidencia demo guardada."); return; }
+      await addDoc(collection(state.db,"scan_events"), {...ev, created_at:serverTimestamp()}); await refreshAll(); toast("Evidencia guardada.");
     }
 
-    function updateItem(id, patch) {
-      const item = state.items.find(entry => entry.id === id);
-      if (!item) return;
-      Object.assign(item, patch, { updatedAt: new Date().toISOString() });
-      saveState();
+    function renderUsers(){
+      $("usersView").innerHTML = `<h2>Usuarios y roles</h2><p class="muted">La creación de cuentas se hace primero en Firebase Authentication. Luego se crea su perfil users/{uid} con rol.</p><div class="card"><h3>Crear/actualizar perfil</h3><input id="profileUid" placeholder="UID de Firebase Auth"><div class="grid two"><input id="profileEmail" placeholder="correo"><input id="profileName" placeholder="Nombre visible"></div><div class="grid three"><select id="profileRole"><option value="viewer">viewer</option><option value="mx_admin">mx_admin</option><option value="co_operator">co_operator</option><option value="super_admin">super_admin</option></select><select id="profileCountry"><option value="MX">MX</option><option value="CO">CO</option></select><input id="profileLocation" placeholder="Ubicación"></div><button class="primary" id="saveProfileBtn">Guardar perfil</button></div>${table(state.data.users,[{h:"Email",f:r=>r.email||"—"},{h:"Nombre",f:r=>r.display_name||"—"},{h:"Rol",f:r=>roleLabel(r.role)},{h:"País",f:r=>r.country||"—"},{h:"Activo",f:r=>r.active?"Sí":"No"}])}`;
+      $("saveProfileBtn").onclick=saveProfile;
+    }
+    async function saveProfile(){
+      const id=$("profileUid").value.trim(); if(!id){toast("Pega el UID.");return}
+      const profile={ email:$("profileEmail").value.trim(), display_name:$("profileName").value.trim(), role:$("profileRole").value, country:$("profileCountry").value, location:$("profileLocation").value.trim(), active:true, updated_at:nowISO() };
+      if(state.demo){ profile.id=id; state.data.users.unshift(profile); localSave(); render(); toast("Perfil demo guardado."); return; }
+      await setDoc(doc(state.db,"users",id), {...profile, updated_at:serverTimestamp()}, {merge:true}); await refreshAll(true);
     }
 
-    function removeItem(id) {
-      state.items = state.items.filter(item => item.id !== id);
-      saveState();
-      showToast("Código eliminado.");
+    function applyStockAndMovements(items,type,ref){ items.forEach(i=>{ const delta=Number(i.confirmed_qty||i.qty||0); let s=state.data.inventory_stock.find(x=>x.upc_ean_gtin===i.upc_ean_gtin); if(!s){s={id:uid(),country:"CO",location:"Bogotá",upc_ean_gtin:i.upc_ean_gtin,available_qty:0,reserved_qty:0}; state.data.inventory_stock.unshift(s);} s.available_qty=Number(s.available_qty||0)+delta; state.data.inventory_movements.unshift({id:uid(),movement_type:type,country:"CO",location:"Bogotá",upc_ean_gtin:i.upc_ean_gtin,quantity_delta:delta,reference_type:type.includes("ENTRY")?"entry_order":"sales_order",reference_id:ref,created_by:profileName(),created_at:nowISO()}); }); }
+    async function writeMovementAndStock(code, delta, type, ref, notes){
+      const stockId = `CO_${normalizeCode(code)}`;
+      await runTransaction(state.db, async tx => {
+        const stockRef = doc(state.db,"inventory_stock",stockId); const stockSnap = await tx.get(stockRef); const current = stockSnap.exists()?Number(stockSnap.data().available_qty||0):0; const next = current + Number(delta);
+        tx.set(stockRef,{country:"CO",location:state.profile.location||"Colombia",upc_ean_gtin:code,available_qty:next,reserved_qty:0,updated_at:serverTimestamp()},{merge:true});
+        const movRef = doc(collection(state.db,"inventory_movements")); tx.set(movRef,{movement_type:type,country:"CO",location:state.profile.location||"Colombia",upc_ean_gtin:code,quantity_delta:Number(delta),reference_type:type.includes("ENTRY")?"entry_order":"sales_order",reference_id:ref,created_by:profileName(),created_by_uid:state.user.uid,created_at:serverTimestamp(),notes:notes||""});
+      });
     }
 
-    function duplicateItem(id) {
-      const item = state.items.find(entry => entry.id === id);
-      if (!item) return;
-      item.quantity = Number(item.quantity || 1) + 1;
-      item.updatedAt = new Date().toISOString();
-      saveState();
-      showToast("Cantidad aumentada.");
-    }
-
-    function getFilteredItems() {
-      const query = $("searchInput").value.trim();
-      const sort = $("sortSelect").value;
-      let items = [...state.items];
-      if (query) items = items.filter(item => item.code.includes(query));
-      if (sort === "oldest") items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      if (sort === "newest") items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      if (sort === "codeAsc") items.sort((a, b) => a.code.localeCompare(b.code));
-      if (sort === "qtyDesc") items.sort((a, b) => Number(b.quantity || 1) - Number(a.quantity || 1));
-      return items;
-    }
-
-    function render() {
-      $("sessionName").value = state.sessionName || "";
-      $("sessionDate").value = state.sessionDate || todayISO();
-      $("scanMode").value = state.scanMode || "continuous";
-      $("count").textContent = state.items.length;
-      $("pieces").textContent = state.items.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
-      $("duplicates").textContent = state.duplicates || 0;
-
-      const items = getFilteredItems();
-      $("filtered").textContent = items.length;
-      const list = $("list");
-      list.innerHTML = "";
-
-      if (!state.items.length) {
-        list.innerHTML = `<div class="empty">Todavía no hay códigos capturados.<br>Abre cámara, agrega manualmente o pega un lote.</div>`;
-        return;
-      }
-
-      if (!items.length) {
-        list.innerHTML = `<div class="empty">No hay coincidencias con el filtro actual.</div>`;
-        return;
-      }
-
-      for (const item of items) {
-        const row = document.createElement("article");
-        row.className = "item";
-        row.innerHTML = `
-          <div class="item-top">
-            <div>
-              <div class="code">${item.code}</div>
-              <div class="meta">Capturado: ${new Date(item.createdAt).toLocaleString("es-MX")}</div>
-            </div>
-            <div class="item-actions">
-              <button class="mini-btn success" data-action="plus" data-id="${item.id}">+1</button>
-              <button class="mini-btn danger" data-action="remove" data-id="${item.id}">Quitar</button>
-            </div>
-          </div>
-          <div class="item-fields">
-            <label>Cantidad<input data-action="qty" data-id="${item.id}" type="number" min="1" step="1" value="${Number(item.quantity || 1)}"></label>
-            <label>Estado<select data-action="status" data-id="${item.id}">
-              <option value="" ${!item.status ? "selected" : ""}>Sin definir</option>
-              <option value="Nuevo" ${item.status === "Nuevo" ? "selected" : ""}>Nuevo</option>
-              <option value="Sellado" ${item.status === "Sellado" ? "selected" : ""}>Sellado</option>
-              <option value="Abierto" ${item.status === "Abierto" ? "selected" : ""}>Abierto</option>
-              <option value="Usado" ${item.status === "Usado" ? "selected" : ""}>Usado</option>
-            </select></label>
-          </div>
-        `;
-        list.appendChild(row);
-      }
-    }
-
-    async function loadDevices() {
-      try {
-        if (!window.ZXingBrowser) return;
-        devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-        const back = devices.find(device => /back|rear|environment|trasera/i.test(device.label));
-        selectedDeviceId = selectedDeviceId || back?.deviceId || devices[0]?.deviceId;
-      } catch (error) {
-        console.warn(error);
-      }
-    }
-
-    async function startScanner() {
-      if (!location.protocol.startsWith("https") && location.hostname !== "localhost") {
-        setStatus("se requiere HTTPS para cámara en iPhone", "err");
-        return showToast("Abre la app desde GitHub Pages HTTPS.");
-      }
-      if (!window.ZXingBrowser) {
-        setStatus("ZXing no cargó desde CDN", "err");
-        return showToast("No cargó la librería de escaneo.");
-      }
-
-      try {
-        setStatus("solicitando permiso", "warn");
-        await loadDevices();
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-        controls = await codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result) => {
-          if (!result) return;
-          const text = normalizeCode(result.getText());
-          const now = Date.now();
-          if (!text || (text === lastRawScan && now - lastRawScanAt < 1600)) return;
-          lastRawScan = text;
-          lastRawScanAt = now;
-          addCode(text, "scan");
-          setStatus(`última lectura ${text}`, "on");
-          if ($("scanMode").value === "single") stopScanner(false);
-        });
-        setStatus("escaneando", "on");
-      } catch (error) {
-        console.error(error);
-        setStatus("no se pudo abrir cámara", "err");
-        showToast("Revisa permiso de cámara, HTTPS o recarga Safari.");
-      }
-    }
-
-    function stopScanner(show = true) {
-      try {
-        if (controls) controls.stop();
-        controls = null;
-        if (video.srcObject) {
-          video.srcObject.getTracks().forEach(track => track.stop());
-          video.srcObject = null;
-        }
-        torchEnabled = false;
-        setStatus("cámara detenida", "idle");
-        if (show) showToast("Cámara detenida.");
-      } catch (error) { console.warn(error); }
-    }
-
-    async function switchCamera() {
-      await loadDevices();
-      if (devices.length <= 1) return showToast("No hay otra cámara disponible.");
-      const currentIndex = devices.findIndex(device => device.deviceId === selectedDeviceId);
-      selectedDeviceId = devices[(currentIndex + 1) % devices.length].deviceId;
-      stopScanner(false);
-      await startScanner();
-      showToast("Cámara cambiada.");
-    }
-
-    async function toggleTorch() {
-      try {
-        const track = video.srcObject?.getVideoTracks?.()[0];
-        const capabilities = track?.getCapabilities?.();
-        if (!track || !capabilities?.torch) return showToast("Linterna no disponible en este navegador.");
-        torchEnabled = !torchEnabled;
-        await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
-        showToast(torchEnabled ? "Linterna encendida." : "Linterna apagada.");
-      } catch (error) {
-        console.warn(error);
-        showToast("Safari puede no permitir linterna desde web.");
-      }
-    }
-
-    function codesText() { return state.items.map(item => item.code).join("\n"); }
-
-    function promptText() {
-      const lote = state.sessionName ? `\nLote: ${state.sessionName}` : "";
-      return `Wolf Inventory Agent: procesa estos EAN y genera CSV para inventario:${lote}\n${codesText()}`;
-    }
-
-    function csvEscape(value) { return `"${String(value ?? "").replaceAll('"', '""')}"`; }
-
-    function buildCsv() {
-      const session = state.sessionName ? `Lote: ${state.sessionName}. ` : "";
-      const sessionDate = state.sessionDate ? `Fecha sesión: ${state.sessionDate}. ` : "";
-      const rows = state.items.map(item => ({
-        UPC_EAN_GTIN: item.code,
-        DESCRIPCION_ORIGINAL: "",
-        CATEGORIA: "",
-        MARCA: "",
-        LINEA: "",
-        NOMBRE_ARTICULO: "",
-        NOMBRE_BUSQUEDA: item.code,
-        ESTADO: item.status || "",
-        CANTIDAD: String(Math.max(1, Number(item.quantity || 1))),
-        PRECIO_PAGADO: "",
-        FECHA_COMPRA: "",
-        LUGAR_COMPRA: "",
-        ASIN: "",
-        SKU_INTERNO: "",
-        URL_REFERENCIA: "",
-        BUSCAR_AUTOMATICO: "Si",
-        STATUS_CAPTURA: "PENDIENTE",
-        NOTAS: `${session}${sessionDate}Capturado en Wolf Scanner Mobile ${nowLabel()}`.trim()
-      }));
-      return [csvHeaders.map(csvEscape).join(","), ...rows.map(row => csvHeaders.map(header => csvEscape(row[header])).join(","))].join("\n");
-    }
-
-    async function copyText(text, message) {
-      if (!text.trim()) return showToast("No hay códigos para copiar.");
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast(message);
-      } catch {
-        const area = document.createElement("textarea");
-        area.value = text;
-        document.body.appendChild(area);
-        area.select();
-        document.execCommand("copy");
-        area.remove();
-        showToast(message);
-      }
-    }
-
-    function downloadFile(content, filename, type) {
-      if (!state.items.length) return showToast("No hay códigos para exportar.");
-      const blob = new Blob([content], { type });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    function fileStamp() {
-      const name = (state.sessionName || "wolf-scanner-mobile").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const date = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      return `${name || "wolf-scanner-mobile"}-${date}`;
-    }
-
-    function exportCsv() {
-      downloadFile("\uFEFF" + buildCsv(), `${fileStamp()}.csv`, "text/csv;charset=utf-8");
-      showToast("CSV exportado.");
-    }
-
-    function exportTxt() {
-      downloadFile(codesText(), `${fileStamp()}.txt`, "text/plain;charset=utf-8");
-      showToast("TXT exportado.");
-    }
-
-    async function shareCodes() {
-      const text = promptText();
-      if (!text.trim()) return showToast("No hay códigos para compartir.");
-      if (navigator.share) {
-        try { await navigator.share({ title: "Wolf Scanner Mobile", text }); return; } catch {}
-      }
-      await copyText(text, "Prompt copiado para compartir.");
-    }
-
-    function clearAll() {
-      if (!state.items.length) return showToast("La lista ya está vacía.");
-      if (!confirm("¿Seguro que quieres limpiar toda la lista y reiniciar duplicados?")) return;
-      state.items = [];
-      state.duplicates = 0;
-      saveState();
-      showToast("Lista limpiada.");
-    }
-
-    $("startBtn").addEventListener("click", startScanner);
-    $("stopBtn").addEventListener("click", () => stopScanner(true));
-    $("switchCameraBtn").addEventListener("click", switchCamera);
-    $("torchBtn").addEventListener("click", toggleTorch);
-    $("addManualBtn").addEventListener("click", () => { addCode($("manualCode").value); $("manualCode").value = ""; $("manualCode").focus(); });
-    $("manualCode").addEventListener("keydown", e => { if (e.key === "Enter") $("addManualBtn").click(); });
-    $("addBulkBtn").addEventListener("click", () => { addBulkCodes($("bulkCodes").value); $("bulkCodes").value = ""; });
-    $("copyListBtn").addEventListener("click", () => copyText(codesText(), "Listado copiado."));
-    $("copyPromptBtn").addEventListener("click", () => copyText(promptText(), "Prompt copiado."));
-    $("exportCsvBtn").addEventListener("click", exportCsv);
-    $("exportTxtBtn").addEventListener("click", exportTxt);
-    $("shareBtn").addEventListener("click", shareCodes);
-    $("clearBtn").addEventListener("click", clearAll);
-    $("searchInput").addEventListener("input", render);
-    $("sortSelect").addEventListener("change", render);
-    $("sessionName").addEventListener("input", saveState);
-    $("sessionDate").addEventListener("change", saveState);
-    $("scanMode").addEventListener("change", saveState);
-
-    $("list").addEventListener("click", (event) => {
-      const target = event.target.closest("button");
-      if (!target) return;
-      if (target.dataset.action === "remove") removeItem(target.dataset.id);
-      if (target.dataset.action === "plus") duplicateItem(target.dataset.id);
-    });
-
-    $("list").addEventListener("change", (event) => {
-      const target = event.target;
-      const id = target.dataset.id;
-      if (!id) return;
-      if (target.dataset.action === "qty") updateItem(id, { quantity: Math.max(1, Number(target.value || 1)) });
-      if (target.dataset.action === "status") updateItem(id, { status: target.value });
-    });
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.warn));
-    }
-
-    window.addEventListener("beforeunload", () => stopScanner(false));
-
-    render();
+    if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));
   </script>
 </body>
 </html>
