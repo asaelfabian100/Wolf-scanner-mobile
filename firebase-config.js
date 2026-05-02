@@ -1,16 +1,14 @@
 // Wolf Inventory Control v1.3
-// 1) Crea tu proyecto en Firebase usando Spark Plan.
-// 2) En Firebase Console > Project settings > Your apps > Web app, copia la configuración.
-// 3) Reemplaza los valores placeholder de abajo.
-// 4) No actives Blaze ni agregues método de pago para mantener cero pesos.
+// Firebase web app configuration for GitHub Pages + Firebase Spark.
+// Mantener el proyecto en Spark Plan para operar con cero pesos.
 
 export const firebaseConfig = {
-  apiKey: "REEMPLAZA_API_KEY",
-  authDomain: "REEMPLAZA_PROJECT_ID.firebaseapp.com",
-  projectId: "REEMPLAZA_PROJECT_ID",
-  storageBucket: "REEMPLAZA_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "REEMPLAZA_SENDER_ID",
-  appId: "REEMPLAZA_APP_ID"
+  apiKey: "AIzaSyAUx_401rYXM03Qdl0RIu-19-VlGldaSJQ",
+  authDomain: "wolf-inventory-control.firebaseapp.com",
+  projectId: "wolf-inventory-control",
+  storageBucket: "wolf-inventory-control.firebasestorage.app",
+  messagingSenderId: "216606742360",
+  appId: "1:216606742360:web:dce8efc3366a52f639b72d"
 };
 
 export function isFirebaseConfigured() {
