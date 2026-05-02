@@ -1,47 +1,249 @@
-/*
-Archivo: app.js
-Mejora: Capturar UPC compacto en Entradas
-
-Objetivo:
-- El botón "Capturar UPC" se reemplaza por una mini ventana de cámara.
-- La cámara aparece dentro de la misma línea.
-- El botón "Cerrar" apaga la cámara y regresa el botón.
-- Solo puede existir un escáner abierto a la vez.
-
-Nota:
-- Si tu app ya usa una librería de lectura de códigos como QuaggaJS, ZXing o BarcodeDetector,
-  conecta la detección en la función handleInlineUPCDetected(lineId, upcValue).
-*/
-
-let activeInlineUPCScanner = {
-  lineId: null,
-  stream: null
+const state = {
+  activeSection: "dashboard",
+  activeScanner: {
+    lineId: null,
+    stream: null,
+    frameRequest: null
+  },
+  entries: [
+    {
+      id: "line-1",
+      order: "ENT-0001",
+      origin: "Proveedor",
+      destination: "CEDIS",
+      status: "Pendiente",
+      upc: "",
+      expectedQty: 12,
+      confirmedQty: "",
+      notes: ""
+    },
+    {
+      id: "line-2",
+      order: "ENT-0002",
+      origin: "Tienda",
+      destination: "Almacén",
+      status: "Pendiente",
+      upc: "",
+      expectedQty: 8,
+      confirmedQty: "",
+      notes: ""
+    },
+    {
+      id: "line-3",
+      order: "ENT-0003",
+      origin: "Marketplace",
+      destination: "CEDIS",
+      status: "Pendiente",
+      upc: "",
+      expectedQty: 4,
+      confirmedQty: "",
+      notes: ""
+    }
+  ]
 };
+
+const sectionMeta = {
+  dashboard: ["Dashboard", "Resumen general del sistema"],
+  entradas: ["Entradas", "Confirmación de órdenes y captura UPC"],
+  inventario: ["Inventario", "Vista base de existencias"],
+  usuarios: ["Usuarios y permisos", "Administración de roles"],
+  configuracion: ["Configuración", "Parámetros base del sistema"]
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  bindNavigation();
+  bindActions();
+  renderEntries();
+  updateMetrics();
+});
+
+window.addEventListener("beforeunload", () => {
+  stopScannerStream();
+});
+
+function bindNavigation() {
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.addEventListener("click", () => {
+      const section = button.dataset.section;
+      setActiveSection(section);
+    });
+  });
+}
+
+function bindActions() {
+  document.getElementById("addEntryLineBtn").addEventListener("click", addEntryLine);
+}
+
+function setActiveSection(section) {
+  state.activeSection = section;
+  closeInlineUPCScanner();
+
+  document.querySelectorAll(".section").forEach((el) => {
+    el.classList.toggle("active", el.id === section);
+  });
+
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    el.classList.toggle("active", el.dataset.section === section);
+  });
+
+  const [title, subtitle] = sectionMeta[section] || sectionMeta.dashboard;
+  document.getElementById("sectionTitle").textContent = title;
+  document.getElementById("sectionSubtitle").textContent = subtitle;
+}
+
+function renderEntries() {
+  const tbody = document.getElementById("entriesTableBody");
+  tbody.innerHTML = "";
+
+  state.entries.forEach((entry) => {
+    const tr = document.createElement("tr");
+    tr.dataset.lineId = entry.id;
+
+    tr.innerHTML = `
+      <td>
+        <input value="${escapeHtml(entry.order)}" data-field="order" data-id="${entry.id}" />
+      </td>
+      <td>
+        <input value="${escapeHtml(entry.origin)}" data-field="origin" data-id="${entry.id}" />
+      </td>
+      <td>
+        <input value="${escapeHtml(entry.destination)}" data-field="destination" data-id="${entry.id}" />
+      </td>
+      <td>
+        <span class="badge ${getStatusClass(entry.status)}" data-status-badge="${entry.id}">
+          ${escapeHtml(entry.status)}
+        </span>
+      </td>
+      <td class="scan-cell">
+        <div class="upc-scan-slot" data-scanner-slot="${entry.id}">
+          ${renderScannerButton(entry.id)}
+        </div>
+      </td>
+      <td>
+        <input
+          value="${escapeHtml(entry.upc)}"
+          inputmode="numeric"
+          placeholder="UPC escaneado"
+          data-field="upc"
+          data-id="${entry.id}"
+          data-upc-input="${entry.id}"
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          value="${entry.expectedQty}"
+          data-field="expectedQty"
+          data-id="${entry.id}"
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          value="${entry.confirmedQty}"
+          placeholder="Cantidad confirmada"
+          data-field="confirmedQty"
+          data-id="${entry.id}"
+          data-confirmed-input="${entry.id}"
+        />
+      </td>
+      <td>
+        <textarea
+          placeholder="Notas"
+          data-field="notes"
+          data-id="${entry.id}"
+        >${escapeHtml(entry.notes)}</textarea>
+      </td>
+      <td>
+        <div class="actions">
+          <button type="button" class="primary-btn" data-confirm="${entry.id}">Confirmar</button>
+          <button type="button" class="warning-btn" data-approval="${entry.id}" hidden>Solicitar aprobación</button>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("[data-field]").forEach((input) => {
+    input.addEventListener("input", onEntryInputChange);
+  });
+
+  tbody.querySelectorAll("[data-confirm]").forEach((button) => {
+    button.addEventListener("click", () => confirmEntry(button.dataset.confirm));
+  });
+
+  tbody.querySelectorAll("[data-approval]").forEach((button) => {
+    button.addEventListener("click", () => requestApproval(button.dataset.approval));
+  });
+
+  refreshApprovalButtons();
+}
+
+function renderScannerButton(lineId) {
+  return `
+    <button
+      type="button"
+      class="btn-upc-scan"
+      data-open-scanner="${lineId}"
+      onclick="openInlineUPCScanner('${lineId}')"
+    >
+      Capturar UPC
+    </button>
+  `;
+}
+
+function onEntryInputChange(event) {
+  const { id, field } = event.target.dataset;
+  const entry = state.entries.find((item) => item.id === id);
+  if (!entry) return;
+
+  if (field === "expectedQty" || field === "confirmedQty") {
+    entry[field] = event.target.value === "" ? "" : Number(event.target.value);
+  } else {
+    entry[field] = event.target.value;
+  }
+
+  refreshEntryStatus(id);
+  refreshApprovalButtons();
+  updateMetrics();
+}
+
+function addEntryLine() {
+  const next = state.entries.length + 1;
+  state.entries.push({
+    id: `line-${Date.now()}`,
+    order: `ENT-${String(next).padStart(4, "0")}`,
+    origin: "",
+    destination: "",
+    status: "Pendiente",
+    upc: "",
+    expectedQty: 0,
+    confirmedQty: "",
+    notes: ""
+  });
+
+  renderEntries();
+  updateMetrics();
+}
 
 async function openInlineUPCScanner(lineId) {
   await closeInlineUPCScanner();
 
   const slot = document.querySelector(`[data-scanner-slot="${lineId}"]`);
-  if (!slot) {
-    console.warn("No se encontró el contenedor del escáner para la línea:", lineId);
-    return;
-  }
+  if (!slot) return;
 
-  slot.innerHTML = `
-    <div class="inline-upc-scanner">
-      <video autoplay playsinline muted data-scanner-video="${lineId}"></video>
-      <button
-        type="button"
-        class="inline-upc-scanner__close"
-        onclick="closeInlineUPCScanner()"
-      >
-        Cerrar
-      </button>
-      <span class="inline-upc-scanner__label">Escaneando UPC</span>
-    </div>
-  `;
+  const template = document.getElementById("inlineScannerTemplate");
+  const scannerNode = template.content.firstElementChild.cloneNode(true);
+  const video = scannerNode.querySelector("video");
+  const closeButton = scannerNode.querySelector(".inline-upc-scanner__close");
 
-  const video = document.querySelector(`[data-scanner-video="${lineId}"]`);
+  closeButton.addEventListener("click", closeInlineUPCScanner);
+
+  slot.innerHTML = "";
+  slot.appendChild(scannerNode);
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -53,76 +255,53 @@ async function openInlineUPCScanner(lineId) {
       audio: false
     });
 
-    activeInlineUPCScanner = {
-      lineId,
-      stream
-    };
-
+    state.activeScanner.lineId = lineId;
+    state.activeScanner.stream = stream;
     video.srcObject = stream;
     await video.play();
 
     startInlineUPCDetection(lineId, video);
   } catch (error) {
     console.error("No se pudo abrir la cámara:", error);
-    restoreInlineUPCButton(lineId);
+    restoreScannerButton(lineId);
     alert("No se pudo abrir la cámara. Revisa permisos del navegador.");
   }
 }
 
 async function closeInlineUPCScanner() {
-  if (activeInlineUPCScanner.stream) {
-    activeInlineUPCScanner.stream.getTracks().forEach((track) => track.stop());
+  const lineId = state.activeScanner.lineId;
+
+  stopScannerStream();
+
+  if (lineId) {
+    restoreScannerButton(lineId);
   }
 
-  if (activeInlineUPCScanner.lineId) {
-    restoreInlineUPCButton(activeInlineUPCScanner.lineId);
-  }
-
-  activeInlineUPCScanner = {
-    lineId: null,
-    stream: null
-  };
+  state.activeScanner.lineId = null;
+  state.activeScanner.stream = null;
+  state.activeScanner.frameRequest = null;
 }
 
-function restoreInlineUPCButton(lineId) {
+function stopScannerStream() {
+  if (state.activeScanner.frameRequest) {
+    cancelAnimationFrame(state.activeScanner.frameRequest);
+  }
+
+  if (state.activeScanner.stream) {
+    state.activeScanner.stream.getTracks().forEach((track) => track.stop());
+  }
+}
+
+function restoreScannerButton(lineId) {
   const slot = document.querySelector(`[data-scanner-slot="${lineId}"]`);
   if (!slot) return;
 
-  slot.innerHTML = `
-    <button
-      type="button"
-      class="btn-upc-scan"
-      onclick="openInlineUPCScanner('${lineId}')"
-    >
-      Capturar UPC
-    </button>
-  `;
+  slot.innerHTML = renderScannerButton(lineId);
 }
-
-function handleInlineUPCDetected(lineId, upcValue) {
-  const upcInput = document.querySelector(`[data-upc-input="${lineId}"]`);
-
-  if (upcInput) {
-    upcInput.value = upcValue;
-    upcInput.dispatchEvent(new Event("input", { bubbles: true }));
-    upcInput.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  closeInlineUPCScanner();
-}
-
-/*
-Conectar aquí la librería real de lectura UPC.
-
-Opción moderna:
-- BarcodeDetector funciona en algunos navegadores Chromium.
-- Para mejor compatibilidad, se recomienda mantener la librería que ya usa tu app
-  y mandar el resultado a handleInlineUPCDetected(lineId, codigoDetectado).
-*/
 
 function startInlineUPCDetection(lineId, video) {
   if (!("BarcodeDetector" in window)) {
-    console.info("BarcodeDetector no está disponible. Conectar aquí QuaggaJS/ZXing si la app ya lo usa.");
+    console.info("BarcodeDetector no está disponible en este navegador. La captura manual sigue funcionando.");
     return;
   }
 
@@ -131,24 +310,129 @@ function startInlineUPCDetection(lineId, video) {
   });
 
   const scan = async () => {
-    if (activeInlineUPCScanner.lineId !== lineId) return;
+    if (state.activeScanner.lineId !== lineId) return;
 
     try {
       const codes = await detector.detect(video);
-
-      if (codes && codes.length > 0) {
-        const value = codes[0].rawValue;
-        if (value) {
-          handleInlineUPCDetected(lineId, value);
-          return;
-        }
+      if (codes && codes.length > 0 && codes[0].rawValue) {
+        handleInlineUPCDetected(lineId, codes[0].rawValue);
+        return;
       }
     } catch (error) {
       console.warn("Error leyendo UPC:", error);
     }
 
-    requestAnimationFrame(scan);
+    state.activeScanner.frameRequest = requestAnimationFrame(scan);
   };
 
-  requestAnimationFrame(scan);
+  state.activeScanner.frameRequest = requestAnimationFrame(scan);
 }
+
+function handleInlineUPCDetected(lineId, upcValue) {
+  const entry = state.entries.find((item) => item.id === lineId);
+  if (entry) {
+    entry.upc = upcValue;
+  }
+
+  const upcInput = document.querySelector(`[data-upc-input="${lineId}"]`);
+  if (upcInput) {
+    upcInput.value = upcValue;
+    upcInput.dispatchEvent(new Event("input", { bubbles: true }));
+    upcInput.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  closeInlineUPCScanner();
+
+  const confirmedInput = document.querySelector(`[data-confirmed-input="${lineId}"]`);
+  if (confirmedInput) confirmedInput.focus();
+}
+
+function confirmEntry(lineId) {
+  const entry = state.entries.find((item) => item.id === lineId);
+  if (!entry) return;
+
+  refreshEntryStatus(lineId);
+
+  if (Number(entry.confirmedQty) !== Number(entry.expectedQty)) {
+    alert("Existe diferencia contra cantidad esperada. Solicita aprobación.");
+    return;
+  }
+
+  entry.status = "Confirmado";
+  updateStatusBadge(lineId);
+  refreshApprovalButtons();
+  updateMetrics();
+}
+
+function requestApproval(lineId) {
+  const entry = state.entries.find((item) => item.id === lineId);
+  if (!entry) return;
+
+  entry.status = "Diferencia";
+  updateStatusBadge(lineId);
+  refreshApprovalButtons();
+  updateMetrics();
+  alert("Solicitud de aprobación registrada.");
+}
+
+function refreshEntryStatus(lineId) {
+  const entry = state.entries.find((item) => item.id === lineId);
+  if (!entry) return;
+
+  const expected = Number(entry.expectedQty);
+  const confirmed = entry.confirmedQty === "" ? "" : Number(entry.confirmedQty);
+
+  if (confirmed === "") {
+    entry.status = "Pendiente";
+  } else if (confirmed === expected) {
+    entry.status = "Pendiente";
+  } else {
+    entry.status = "Diferencia";
+  }
+
+  updateStatusBadge(lineId);
+}
+
+function refreshApprovalButtons() {
+  state.entries.forEach((entry) => {
+    const button = document.querySelector(`[data-approval="${entry.id}"]`);
+    if (!button) return;
+
+    const hasConfirmedQty = entry.confirmedQty !== "";
+    const hasDifference = hasConfirmedQty && Number(entry.confirmedQty) !== Number(entry.expectedQty);
+    button.hidden = !hasDifference;
+  });
+}
+
+function updateStatusBadge(lineId) {
+  const entry = state.entries.find((item) => item.id === lineId);
+  const badge = document.querySelector(`[data-status-badge="${lineId}"]`);
+  if (!entry || !badge) return;
+
+  badge.textContent = entry.status;
+  badge.className = `badge ${getStatusClass(entry.status)}`;
+}
+
+function getStatusClass(status) {
+  if (status === "Confirmado") return "done";
+  if (status === "Diferencia") return "diff";
+  return "pending";
+}
+
+function updateMetrics() {
+  document.getElementById("metricOrders").textContent = state.entries.length;
+  document.getElementById("metricUpcs").textContent = state.entries.filter((entry) => entry.upc).length;
+  document.getElementById("metricDiffs").textContent = state.entries.filter((entry) => entry.status === "Diferencia").length;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+window.openInlineUPCScanner = openInlineUPCScanner;
+window.closeInlineUPCScanner = closeInlineUPCScanner;

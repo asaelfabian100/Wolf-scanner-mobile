@@ -1,36 +1,179 @@
-<!--
-Archivo: index.html
-Mejora: Capturar UPC compacto en Entradas
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wolf Inventory Control</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">W</div>
+        <div>
+          <h1>Wolf Inventory</h1>
+          <p>Control operativo</p>
+        </div>
+      </div>
 
-REEMPLAZAR la celda/bloque actual donde aparece el botón "Capturar UPC"
-por este bloque dentro de cada línea de entrada.
+      <nav class="nav">
+        <button class="nav-item active" data-section="dashboard">Dashboard</button>
+        <button class="nav-item" data-section="entradas">Entradas</button>
+        <button class="nav-item" data-section="inventario">Inventario</button>
+        <button class="nav-item" data-section="usuarios">Usuarios</button>
+        <button class="nav-item" data-section="configuracion">Configuración</button>
+      </nav>
+    </aside>
 
-IMPORTANTE:
-- Cambia {{LINE_ID}} por el id real de la línea.
-- El input UPC de la misma línea debe tener data-upc-input="{{LINE_ID}}".
--->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="sectionTitle">Dashboard</h2>
+          <p id="sectionSubtitle">Resumen general del sistema</p>
+        </div>
+        <div class="user-chip">
+          <span class="status-dot"></span>
+          Superadmin
+        </div>
+      </header>
 
-<td class="scan-cell">
-  <div class="upc-scan-slot" data-scanner-slot="{{LINE_ID}}">
-    <button
-      type="button"
-      class="btn-upc-scan"
-      onclick="openInlineUPCScanner('{{LINE_ID}}')"
-    >
-      Capturar UPC
-    </button>
+      <section id="dashboard" class="section active">
+        <div class="cards-grid">
+          <article class="card">
+            <span class="card-label">Órdenes esperadas</span>
+            <strong id="metricOrders">3</strong>
+            <p>Entradas pendientes por confirmar.</p>
+          </article>
+          <article class="card">
+            <span class="card-label">UPCs esperados</span>
+            <strong id="metricUpcs">7</strong>
+            <p>Total de SKUs/UPCs en proceso.</p>
+          </article>
+          <article class="card">
+            <span class="card-label">Diferencias</span>
+            <strong id="metricDiffs">0</strong>
+            <p>Solicitudes pendientes de aprobación.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="entradas" class="section">
+        <div class="section-header">
+          <div>
+            <h3>Entradas</h3>
+            <p>Confirma cantidades recibidas por orden, UPC y destino.</p>
+          </div>
+          <button class="primary-btn" id="addEntryLineBtn">Agregar línea</button>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table entradas-table">
+            <thead>
+              <tr>
+                <th>Orden</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Estado</th>
+                <th>Captura UPC</th>
+                <th>UPC</th>
+                <th>Cantidad esperada</th>
+                <th>Cantidad confirmada</th>
+                <th>Notas</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="entriesTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="inventario" class="section">
+        <div class="section-header">
+          <div>
+            <h3>Inventario</h3>
+            <p>Vista base de existencias.</p>
+          </div>
+        </div>
+
+        <div class="empty-state">
+          <strong>Inventario listo para conectar.</strong>
+          <span>Esta sección conserva estructura sin afectar Entradas.</span>
+        </div>
+      </section>
+
+      <section id="usuarios" class="section">
+        <div class="section-header">
+          <div>
+            <h3>Usuarios y permisos</h3>
+            <p>Catálogo base de roles operativos.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Alcance</th>
+                <th>Permisos principales</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dueño</td>
+                <td>Dirección general</td>
+                <td>Consulta total, reportes, autorizaciones no técnicas</td>
+              </tr>
+              <tr>
+                <td>Superadmin</td>
+                <td>Administración técnica</td>
+                <td>Usuarios, permisos, configuración crítica</td>
+              </tr>
+              <tr>
+                <td>Operador</td>
+                <td>Almacén</td>
+                <td>Captura de entradas, conteos y confirmaciones</td>
+              </tr>
+              <tr>
+                <td>Auditor</td>
+                <td>Consulta</td>
+                <td>Lectura, bitácoras y validación</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="configuracion" class="section">
+        <div class="section-header">
+          <div>
+            <h3>Configuración</h3>
+            <p>Parámetros base del sistema.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <label class="field-card">
+            <span>Modo de escáner</span>
+            <select id="scannerMode">
+              <option value="barcode-detector">BarcodeDetector / cámara</option>
+              <option value="manual">Manual</option>
+            </select>
+          </label>
+        </div>
+      </section>
+    </main>
   </div>
-</td>
 
-<!-- Ejemplo del campo UPC de la misma línea:
+  <template id="inlineScannerTemplate">
+    <div class="inline-upc-scanner">
+      <video class="inline-upc-scanner__video" autoplay playsinline muted></video>
+      <button type="button" class="inline-upc-scanner__close">Cerrar</button>
+      <span class="inline-upc-scanner__label">Escaneando UPC</span>
+    </div>
+  </template>
 
-<td>
-  <input
-    type="text"
-    class="upc-input"
-    data-upc-input="{{LINE_ID}}"
-    placeholder="UPC escaneado"
-  />
-</td>
-
--->
+  <script src="./app.js"></script>
+</body>
+</html>
