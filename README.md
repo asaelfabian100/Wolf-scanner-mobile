@@ -1,6 +1,6 @@
 # Wolf Inventory Control
 
-**Versión:** v1.3.1 — Entry UX polish  
+**Versión:** v1.3.2 — Entry confirmation UX  
 **Estatus:** MVP funcional cero pesos  
 **Hosting recomendado:** GitHub Pages  
 **Base central recomendada:** Firebase Firestore en Spark Plan
@@ -45,7 +45,7 @@ Colombia vende.
 El sistema registra movimientos auditables.
 ```
 
-## 4. Funciones actuales v1.3.1
+## 4. Funciones actuales v1.3.2
 
 - Login con Firebase Authentication.
 - Roles operativos:
@@ -67,16 +67,22 @@ El sistema registra movimientos auditables.
 - Soporte PWA básico.
 - Demo local para revisar interfaz sin Firebase.
 
-### Mejora v1.3.1
+### Mejora v1.3.2
 
-- La sección **Entradas** deja de usar un textarea con valores mezclados.
-- Cada línea de entrada ahora tiene campos independientes para:
-  - Capturar UPC con cámara.
-  - UPC/EAN/GTIN almacenado.
+- La tabla de **Entradas** queda estructurada por línea de producto.
+- Cada línea muestra columnas independientes para:
+  - Orden.
+  - Origen.
+  - Destino.
+  - Estado.
+  - UPCs.
   - Cantidad esperada.
-  - Notas por línea.
-  - Editar/bloquear línea.
-- Se conserva la creación de órdenes de entrada desde México y la confirmación física desde Colombia.
+  - Cantidad confirmada.
+  - Acción.
+- La cantidad confirmada ahora se captura en un recuadro propio dentro de la fila.
+- La acción principal queda como **Confirmar**.
+- Si la cantidad confirmada es distinta a la esperada, aparece **Solicitar aprobación**.
+- Las diferencias quedan marcadas para evitar que el flujo normal afecte stock sin revisión.
 
 ## 5. Arquitectura cero pesos
 
@@ -290,6 +296,12 @@ inventory_movements = estado de cuenta
 
 ## Historial de versiones
 
-### v1.3.1 — Entry UX polish
+### v1.3.2 — Entry confirmation UX
 
 Pulido de la sección Entradas: captura por línea con campos independientes para UPC, cantidad y notas; botón de captura por cámara y botón de edición por línea.
+
+### v1.3.2 — Entry confirmation UX
+
+- Mejora la confirmación de entradas por línea.
+- Se separan columnas de origen, destino, UPC, cantidad esperada y cantidad confirmada.
+- Se agrega solicitud de aprobación cuando hay diferencias hacia arriba o hacia abajo.
