@@ -1,6 +1,6 @@
 # Wolf Inventory Control
 
-**Versión:** v1.3.2 — Entry confirmation UX  
+**Versión:** v1.3.3 — Remove local demo  
 **Estatus:** MVP funcional cero pesos  
 **Hosting recomendado:** GitHub Pages  
 **Base central recomendada:** Firebase Firestore en Spark Plan
@@ -45,7 +45,7 @@ Colombia vende.
 El sistema registra movimientos auditables.
 ```
 
-## 4. Funciones actuales v1.3.2
+## 4. Funciones actuales v1.3.3
 
 - Login con Firebase Authentication.
 - Roles operativos:
@@ -65,9 +65,8 @@ El sistema registra movimientos auditables.
 - Scanner integrado como herramienta de evidencia.
 - Captura manual de UPC/EAN/GTIN.
 - Soporte PWA básico.
-- Demo local para revisar interfaz sin Firebase.
 
-### Mejora v1.3.2
+### Mejora v1.3.3
 
 - La tabla de **Entradas** queda estructurada por línea de producto.
 - Cada línea muestra columnas independientes para:
@@ -296,11 +295,11 @@ inventory_movements = estado de cuenta
 
 ## Historial de versiones
 
-### v1.3.2 — Entry confirmation UX
+### v1.3.3 — Remove local demo
 
 Pulido de la sección Entradas: captura por línea con campos independientes para UPC, cantidad y notas; botón de captura por cámara y botón de edición por línea.
 
-### v1.3.2 — Entry confirmation UX
+### v1.3.3 — Remove local demo
 
 - Mejora la confirmación de entradas por línea.
 - Se separan columnas de origen, destino, UPC, cantidad esperada y cantidad confirmada.
