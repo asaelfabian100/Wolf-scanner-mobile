@@ -1,21 +1,86 @@
-const DEMO_USERS = [
-  {
-    email: "admin@wolf.com",
-    password: "admin123",
-    name: "Superadmin",
-    role: "Superadmin"
-  }
-];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+
+const ROLE_PERMISSIONS = {
+  owner: [
+    "dashboard:read",
+    "orders:create",
+    "orders:confirm",
+    "orders:authorize",
+    "inventory:read",
+    "users:read",
+    "settings:read"
+  ],
+  "super-admin": [
+    "dashboard:read",
+    "orders:create",
+    "orders:confirm",
+    "orders:authorize",
+    "inventory:read",
+    "users:read",
+    "settings:read",
+    "users:write",
+    "settings:write"
+  ],
+  superadmin: [
+    "dashboard:read",
+    "orders:create",
+    "orders:confirm",
+    "orders:authorize",
+    "inventory:read",
+    "users:read",
+    "settings:read",
+    "users:write",
+    "settings:write"
+  ],
+  "operador-mexico": [
+    "dashboard:read",
+    "orders:create"
+  ],
+  "operador-colombia": [
+    "dashboard:read",
+    "orders:confirm"
+  ],
+  auditor: [
+    "dashboard:read",
+    "orders:confirm",
+    "inventory:read",
+    "users:read"
+  ]
+};
 
 const state = {
   activeSection: "dashboard",
+  currentUser: null,
+  currentProfile: null,
   nextOrderSequence: 1,
   activeScanner: {
     lineId: null,
     stream: null,
     frameRequest: null
   },
-  currentUser: null,
   entryDraft: {
     internalId: "",
     lines: []
@@ -37,10 +102,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bindNavigation();
   bindActions();
   initializeDraft();
-  restoreSession();
   renderEntryLines();
   renderConfirmations();
   updateMetrics();
+
+  onAuthStateChanged(auth, handleAuthState);
 });
 
 window.addEventListener("beforeunload", () => {
@@ -48,69 +114,127 @@ window.addEventListener("beforeunload", () => {
 });
 
 function bindAuth() {
-  document.getElementById("loginForm").addEventListener("submit", (event) => {
+  document.getElementById("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
+    const submitButton = document.getElementById("loginSubmitBtn");
 
-    const user = DEMO_USERS.find((item) => item.email === email && item.password === password);
+    setLoginError("");
+    submitButton.disabled = true;
+    submitButton.textContent = "Ingresando...";
 
-    if (!user) {
-      document.getElementById("loginError").hidden = false;
-      return;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Error de login:", error);
+      setLoginError(getFriendlyAuthError(error.code));
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Ingresar";
     }
-
-    document.getElementById("loginError").hidden = true;
-    setSession(user);
   });
 }
 
-function setSession(user) {
-  state.currentUser = {
-    email: user.email,
-    name: user.name,
-    role: user.role
-  };
+async function handleAuthState(user) {
+  if (!user) {
+    state.currentUser = null;
+    state.currentProfile = null;
 
-  sessionStorage.setItem("wicSession", JSON.stringify(state.currentUser));
+    document.getElementById("appView").hidden = true;
+    document.getElementById("loginView").hidden = false;
+    document.getElementById("loginPassword").value = "";
+    return;
+  }
 
-  document.getElementById("currentUserName").textContent = state.currentUser.name;
-  document.getElementById("currentUserEmail").textContent = state.currentUser.email;
+  state.currentUser = user;
+  state.currentProfile = await loadUserProfile(user);
+
+  applyUserSession();
+  await loadOrdersFromFirebase();
 
   document.getElementById("loginView").hidden = true;
   document.getElementById("appView").hidden = false;
 }
 
-function restoreSession() {
-  const saved = sessionStorage.getItem("wicSession");
+async function loadUserProfile(user) {
+  const candidates = [
+    doc(db, "users", user.uid),
+    doc(db, "userProfiles", user.uid),
+    doc(db, "profiles", user.uid)
+  ];
 
-  if (!saved) {
-    document.getElementById("loginView").hidden = false;
-    document.getElementById("appView").hidden = true;
+  for (const ref of candidates) {
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      return normalizeProfile(snap.data(), user);
+    }
+  }
+
+  return normalizeProfile({
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName || user.email,
+    role: "auditor",
+    active: true
+  }, user);
+}
+
+function normalizeProfile(profile, user) {
+  const rawRole = profile.role || profile.rol || profile.type || profile.tipo || "auditor";
+  const normalizedRole = normalizeRole(rawRole);
+  const customPermissions = Array.isArray(profile.permissions) ? profile.permissions : [];
+  const basePermissions = ROLE_PERMISSIONS[normalizedRole] || ROLE_PERMISSIONS.auditor;
+
+  return {
+    uid: user.uid,
+    email: profile.email || user.email,
+    displayName: profile.displayName || profile.name || profile.nombre || user.displayName || user.email,
+    role: normalizedRole,
+    roleLabel: profile.roleLabel || profile.rolLabel || rawRole,
+    active: profile.active !== false,
+    permissions: [...new Set([...basePermissions, ...customPermissions])]
+  };
+}
+
+function normalizeRole(role) {
+  return String(role)
+    .trim()
+    .toLowerCase()
+    .replaceAll("_", "-")
+    .replaceAll(" ", "-");
+}
+
+function hasPermission(permission) {
+  if (!state.currentProfile) return false;
+  return state.currentProfile.permissions.includes(permission);
+}
+
+function applyUserSession() {
+  const profile = state.currentProfile;
+
+  if (!profile.active) {
+    setLoginError("El usuario está inactivo. Contacta al administrador.");
+    signOut(auth);
     return;
   }
 
-  try {
-    const user = JSON.parse(saved);
-    setSession(user);
-  } catch {
-    sessionStorage.removeItem("wicSession");
-    document.getElementById("loginView").hidden = false;
-    document.getElementById("appView").hidden = true;
+  document.getElementById("currentUserName").textContent = profile.displayName;
+  document.getElementById("currentUserRole").textContent = profile.roleLabel || profile.role;
+  document.getElementById("currentUserEmail").textContent = profile.email;
+
+  document.querySelectorAll("[data-permission]").forEach((element) => {
+    const permission = element.dataset.permission;
+    const allowed = hasPermission(permission);
+    element.hidden = !allowed;
+    element.disabled = !allowed;
+  });
+
+  const activeButton = document.querySelector(".nav-item.active[data-section]");
+  if (activeButton && activeButton.hidden) {
+    setActiveSection("dashboard");
   }
-}
-
-function logout() {
-  closeInlineUPCScanner();
-  sessionStorage.removeItem("wicSession");
-  state.currentUser = null;
-
-  document.getElementById("loginPassword").value = "";
-  document.getElementById("loginError").hidden = true;
-  document.getElementById("appView").hidden = true;
-  document.getElementById("loginView").hidden = false;
-  document.getElementById("loginEmail").focus();
 }
 
 function bindNavigation() {
@@ -124,6 +248,7 @@ function bindNavigation() {
 function bindActions() {
   document.getElementById("addEntryLineBtn").addEventListener("click", addEntryLine);
   document.getElementById("captureEntryOrderBtn").addEventListener("click", captureEntryOrder);
+  document.getElementById("refreshOrdersBtn").addEventListener("click", loadOrdersFromFirebase);
   document.getElementById("logoutBtn").addEventListener("click", logout);
 }
 
@@ -268,7 +393,12 @@ function removeDraftLine(lineId) {
   renderEntryLines();
 }
 
-function captureEntryOrder() {
+async function captureEntryOrder() {
+  if (!hasPermission("orders:create")) {
+    alert("No tienes permiso para crear órdenes.");
+    return;
+  }
+
   closeInlineUPCScanner();
 
   const mexicoOrderNumber = document.getElementById("entryOrderNumber").value.trim();
@@ -315,16 +445,32 @@ function captureEntryOrder() {
     destination,
     status: "Pendiente",
     createdAt: new Date().toISOString(),
+    createdAtServer: serverTimestamp(),
+    createdBy: state.currentUser.uid,
+    createdByEmail: state.currentUser.email,
     lines: cleanLines
   };
 
-  state.orders.unshift(order);
-  state.nextOrderSequence += 1;
+  const button = document.getElementById("captureEntryOrderBtn");
+  button.disabled = true;
+  button.textContent = "Guardando...";
 
-  resetEntryDraft();
-  renderConfirmations();
-  updateMetrics();
-  setActiveSection("confirmaciones");
+  try {
+    await setDoc(doc(db, "orders", order.id), order);
+    state.orders.unshift(order);
+    state.nextOrderSequence += 1;
+
+    resetEntryDraft();
+    renderConfirmations();
+    updateMetrics();
+    setActiveSection("confirmaciones");
+  } catch (error) {
+    console.error("Error guardando orden:", error);
+    alert("No se pudo guardar la orden en Firebase.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Capturar entrada";
+  }
 }
 
 function resetEntryDraft() {
@@ -337,6 +483,25 @@ function resetEntryDraft() {
 
   document.getElementById("entryInternalId").value = state.entryDraft.internalId;
   renderEntryLines();
+}
+
+async function loadOrdersFromFirebase() {
+  if (!auth.currentUser) return;
+
+  try {
+    const ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(ordersQuery);
+    state.orders = snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
+
+    renderConfirmations();
+    updateMetrics();
+  } catch (error) {
+    console.error("Error cargando órdenes:", error);
+    renderConfirmations();
+  }
 }
 
 function renderConfirmations() {
@@ -362,6 +527,10 @@ function renderConfirmations() {
         <div class="order-meta">
           <span>Orden México</span>
           <strong>${escapeHtml(order.mexicoOrderNumber)}</strong>
+        </div>
+        <div class="order-meta">
+          <span>Folio interno</span>
+          <strong>${escapeHtml(order.id)}</strong>
         </div>
         <div class="order-meta">
           <span>Origen</span>
@@ -390,7 +559,7 @@ function renderConfirmations() {
             </tr>
           </thead>
           <tbody>
-            ${order.lines.map((line) => renderConfirmationLine(line)).join("")}
+            ${(order.lines || []).map((line) => renderConfirmationLine(line)).join("")}
           </tbody>
         </table>
       </div>
@@ -467,10 +636,10 @@ function renderConfirmationLine(line) {
 
 function onConfirmationLineChange(event) {
   const { lineId, confirmField } = event.target.dataset;
-  const line = findConfirmationLine(lineId);
-  if (!line) return;
+  const found = findConfirmationLineWithOrder(lineId);
+  if (!found) return;
 
-  line[confirmField] = confirmField === "confirmedQty"
+  found.line[confirmField] = confirmField === "confirmedQty"
     ? event.target.value === "" ? "" : Number(event.target.value)
     : event.target.value;
 
@@ -480,9 +649,16 @@ function onConfirmationLineChange(event) {
   updateMetrics();
 }
 
-function confirmLine(lineId) {
-  const line = findConfirmationLine(lineId);
-  if (!line) return;
+async function confirmLine(lineId) {
+  if (!hasPermission("orders:confirm")) {
+    alert("No tienes permiso para confirmar órdenes.");
+    return;
+  }
+
+  const found = findConfirmationLineWithOrder(lineId);
+  if (!found) return;
+
+  const { order, line } = found;
 
   if (line.confirmedQty === "") {
     alert("Captura la cantidad confirmada.");
@@ -497,24 +673,64 @@ function confirmLine(lineId) {
   }
 
   updateParentOrderStatuses();
+
+  try {
+    await updateDoc(doc(db, "orders", order.id), {
+      status: order.status,
+      lines: order.lines,
+      updatedAt: serverTimestamp(),
+      updatedBy: state.currentUser.uid
+    });
+  } catch (error) {
+    console.error("Error confirmando línea:", error);
+    alert("No se pudo actualizar la orden en Firebase.");
+  }
+
   renderConfirmations();
   updateMetrics();
 }
 
-function requestAuthorization(lineId) {
-  const line = findConfirmationLine(lineId);
-  if (!line) return;
+async function requestAuthorization(lineId) {
+  if (!hasPermission("orders:confirm")) {
+    alert("No tienes permiso para solicitar autorización.");
+    return;
+  }
+
+  const found = findConfirmationLineWithOrder(lineId);
+  if (!found) return;
+
+  const { order, line } = found;
 
   line.status = "Diferencia";
+  line.authorizationRequested = true;
+  line.authorizationRequestedAt = new Date().toISOString();
+  line.authorizationRequestedBy = state.currentUser.uid;
+
   updateParentOrderStatuses();
+
+  try {
+    await updateDoc(doc(db, "orders", order.id), {
+      status: order.status,
+      lines: order.lines,
+      updatedAt: serverTimestamp(),
+      updatedBy: state.currentUser.uid
+    });
+
+    alert("Solicitud de autorización registrada.");
+  } catch (error) {
+    console.error("Error solicitando autorización:", error);
+    alert("No se pudo registrar la solicitud en Firebase.");
+  }
+
   renderConfirmations();
   updateMetrics();
-  alert("Solicitud de autorización registrada.");
 }
 
 function refreshLineStatus(lineId) {
-  const line = findConfirmationLine(lineId);
-  if (!line) return;
+  const found = findConfirmationLineWithOrder(lineId);
+  if (!found) return;
+
+  const line = found.line;
 
   if (line.confirmedQty === "") {
     line.status = "Pendiente";
@@ -527,7 +743,7 @@ function refreshLineStatus(lineId) {
 
 function refreshAuthorizationButtons() {
   state.orders.forEach((order) => {
-    order.lines.forEach((line) => {
+    (order.lines || []).forEach((line) => {
       const button = document.querySelector(`[data-authorize-line="${line.id}"]`);
       if (!button) return;
 
@@ -540,8 +756,9 @@ function refreshAuthorizationButtons() {
 
 function updateParentOrderStatuses() {
   state.orders.forEach((order) => {
-    const hasDifference = order.lines.some((line) => line.status === "Diferencia");
-    const allConfirmed = order.lines.every((line) => line.status === "Confirmado");
+    const lines = order.lines || [];
+    const hasDifference = lines.some((line) => line.status === "Diferencia");
+    const allConfirmed = lines.length > 0 && lines.every((line) => line.status === "Confirmado");
 
     if (hasDifference) order.status = "Diferencia";
     else if (allConfirmed) order.status = "Confirmado";
@@ -654,9 +871,9 @@ function handleInlineUPCDetected(lineId, upcValue) {
     draftLine.upc = upcValue;
   }
 
-  const confirmationLine = findConfirmationLine(lineId);
-  if (confirmationLine) {
-    confirmationLine.confirmedUpc = upcValue;
+  const found = findConfirmationLineWithOrder(lineId);
+  if (found) {
+    found.line.confirmedUpc = upcValue;
   }
 
   const upcInput = document.querySelector(`[data-upc-input="${lineId}"]`);
@@ -672,19 +889,19 @@ function handleInlineUPCDetected(lineId, upcValue) {
   if (confirmedInput) confirmedInput.focus();
 }
 
-function findConfirmationLine(lineId) {
+function findConfirmationLineWithOrder(lineId) {
   for (const order of state.orders) {
-    const line = order.lines.find((item) => item.id === lineId);
-    if (line) return line;
+    const line = (order.lines || []).find((item) => item.id === lineId);
+    if (line) return { order, line };
   }
 
   return null;
 }
 
 function updateMetrics() {
-  const totalLines = state.orders.reduce((sum, order) => sum + order.lines.length, 0);
+  const totalLines = state.orders.reduce((sum, order) => sum + (order.lines || []).length, 0);
   const totalDiffs = state.orders.reduce(
-    (sum, order) => sum + order.lines.filter((line) => line.status === "Diferencia").length,
+    (sum, order) => sum + (order.lines || []).filter((line) => line.status === "Diferencia").length,
     0
   );
 
@@ -697,6 +914,41 @@ function getStatusClass(status) {
   if (status === "Confirmado") return "done";
   if (status === "Diferencia") return "diff";
   return "pending";
+}
+
+async function logout() {
+  closeInlineUPCScanner();
+
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error("Error cerrando sesión:", error);
+    alert("No se pudo cerrar sesión.");
+  }
+}
+
+function setLoginError(message) {
+  const error = document.getElementById("loginError");
+  if (!message) {
+    error.hidden = true;
+    error.textContent = "";
+    return;
+  }
+
+  error.textContent = message;
+  error.hidden = false;
+}
+
+function getFriendlyAuthError(code) {
+  const errors = {
+    "auth/invalid-credential": "Correo o contraseña incorrectos.",
+    "auth/user-not-found": "El usuario no existe.",
+    "auth/wrong-password": "La contraseña es incorrecta.",
+    "auth/too-many-requests": "Demasiados intentos. Intenta más tarde.",
+    "auth/network-request-failed": "Error de red. Revisa tu conexión."
+  };
+
+  return errors[code] || "No se pudo iniciar sesión.";
 }
 
 function escapeHtml(value) {

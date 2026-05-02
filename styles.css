@@ -37,6 +37,10 @@ button {
   border: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .login-view {
   min-height: 100vh;
   display: grid;
@@ -124,21 +128,6 @@ button {
   font-weight: 700;
 }
 
-.demo-access {
-  margin-top: 18px;
-  padding: 12px;
-  border-radius: 14px;
-  background: #f9fafb;
-  color: var(--muted);
-  display: grid;
-  gap: 4px;
-  font-size: 13px;
-}
-
-.demo-access strong {
-  color: var(--text);
-}
-
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -214,6 +203,11 @@ button {
   background: var(--sidebar-soft);
 }
 
+.nav-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
 .nav-item:active {
   transform: scale(0.99);
 }
@@ -233,7 +227,7 @@ button {
 
 .session-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 13px;
   border-radius: 14px;
@@ -244,6 +238,7 @@ button {
 .session-card div {
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .session-card strong {
@@ -252,6 +247,7 @@ button {
 
 .session-card small {
   color: #cbd5e1;
+  word-break: break-word;
 }
 
 .nav-item--logout {
@@ -294,8 +290,8 @@ button {
   align-items: center;
   padding: 9px 12px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+  background: #ecfdf5;
+  color: #166534;
   font-weight: 800;
   font-size: 13px;
 }
@@ -303,6 +299,7 @@ button {
 .status-dot {
   width: 9px;
   height: 9px;
+  margin-top: 4px;
   border-radius: 50%;
   background: #22c55e;
   flex: 0 0 auto;
@@ -455,6 +452,12 @@ button {
 
 .primary-btn:hover {
   background: #020617;
+}
+
+.primary-btn:disabled,
+.secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .secondary-btn,
@@ -659,7 +662,7 @@ button {
 
 .order-card__header {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
   gap: 14px;
   padding: 18px;
   background: #f9fafb;

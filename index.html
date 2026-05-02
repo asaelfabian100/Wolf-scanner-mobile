@@ -13,7 +13,7 @@
         <div class="brand-mark brand-mark--login">W</div>
         <div>
           <h1>Wolf Inventory Control</h1>
-          <p>Acceso operativo seguro</p>
+          <p>Acceso conectado a Firebase</p>
         </div>
       </div>
 
@@ -28,15 +28,10 @@
           <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required />
         </label>
 
-        <button type="submit" class="primary-btn full-width">Ingresar</button>
+        <button type="submit" class="primary-btn full-width" id="loginSubmitBtn">Ingresar</button>
 
-        <p id="loginError" class="form-error" hidden>Correo o contraseña incorrectos.</p>
+        <p id="loginError" class="form-error" hidden>No se pudo iniciar sesión.</p>
       </form>
-
-      <div class="demo-access">
-        <strong>Acceso demo</strong>
-        <span>Correo: admin@wolf.com · Contraseña: admin123</span>
-      </div>
     </section>
   </div>
 
@@ -56,23 +51,23 @@
             <span class="nav-icon">▦</span>
             <span>Dashboard</span>
           </button>
-          <button class="nav-item" data-section="entradas">
+          <button class="nav-item" data-section="entradas" data-permission="orders:create">
             <span class="nav-icon">↧</span>
             <span>Entradas</span>
           </button>
-          <button class="nav-item" data-section="confirmaciones">
+          <button class="nav-item" data-section="confirmaciones" data-permission="orders:confirm">
             <span class="nav-icon">✓</span>
             <span>Confirmaciones de órdenes</span>
           </button>
-          <button class="nav-item" data-section="inventario">
+          <button class="nav-item" data-section="inventario" data-permission="inventory:read">
             <span class="nav-icon">□</span>
             <span>Inventario</span>
           </button>
-          <button class="nav-item" data-section="usuarios">
+          <button class="nav-item" data-section="usuarios" data-permission="users:read">
             <span class="nav-icon">◉</span>
             <span>Usuarios</span>
           </button>
-          <button class="nav-item" data-section="configuracion">
+          <button class="nav-item" data-section="configuracion" data-permission="settings:read">
             <span class="nav-icon">⚙</span>
             <span>Configuración</span>
           </button>
@@ -83,8 +78,9 @@
         <div class="session-card">
           <span class="status-dot"></span>
           <div>
-            <strong id="currentUserName">Superadmin</strong>
-            <small id="currentUserEmail">admin@wolf.com</small>
+            <strong id="currentUserName">Usuario</strong>
+            <small id="currentUserRole">Rol</small>
+            <small id="currentUserEmail">correo</small>
           </div>
         </div>
 
@@ -102,7 +98,7 @@
           <p id="sectionSubtitle">Resumen general del sistema</p>
         </div>
         <div class="topbar-actions">
-          <span class="environment-pill">Demo local</span>
+          <span class="environment-pill">Firebase</span>
         </div>
       </header>
 
@@ -130,14 +126,14 @@
             <h3>Flujo operativo</h3>
             <ol class="flow-list">
               <li><strong>México</strong> genera una orden en Entradas.</li>
-              <li>La orden viaja a <strong>Confirmaciones de órdenes</strong>.</li>
-              <li>Destino escanea, confirma cantidades y solicita autorización si hay diferencias.</li>
+              <li>La orden se guarda en Firebase y aparece en <strong>Confirmaciones de órdenes</strong>.</li>
+              <li>Destino confirma cantidades y solicita autorización si hay diferencias.</li>
             </ol>
           </article>
 
           <article class="panel">
-            <h3>Estado general</h3>
-            <p class="muted-text">La app conserva sesión activa hasta cerrar sesión. Al cerrar, vuelve a solicitar contraseña.</p>
+            <h3>Sesión y permisos</h3>
+            <p class="muted-text">La sesión se controla con Firebase Auth. Los accesos se habilitan según el perfil del usuario en Firestore.</p>
           </article>
         </div>
       </section>
@@ -206,6 +202,7 @@
             <h3>Confirmaciones de órdenes</h3>
             <p>Confirma recepción por UPC contra las cantidades esperadas.</p>
           </div>
+          <button type="button" class="secondary-btn" id="refreshOrdersBtn">Actualizar</button>
         </div>
 
         <div id="confirmationsContainer" class="orders-stack"></div>
@@ -229,7 +226,7 @@
         <div class="section-header">
           <div>
             <h3>Usuarios y permisos</h3>
-            <p>Catálogo base de roles operativos.</p>
+            <p>Catálogo base leído desde el perfil activo y roles soportados.</p>
           </div>
         </div>
 
@@ -244,12 +241,12 @@
             </thead>
             <tbody>
               <tr>
-                <td>Dueño</td>
+                <td>Owner</td>
                 <td>Dirección general</td>
                 <td>Consulta total, reportes, autorizaciones no técnicas</td>
               </tr>
               <tr>
-                <td>Superadmin</td>
+                <td>Super Admin</td>
                 <td>Administración técnica</td>
                 <td>Usuarios, permisos, configuración crítica</td>
               </tr>
@@ -292,7 +289,7 @@
 
           <div class="field-card">
             <span>Autenticación</span>
-            <p class="muted-text">La demo local valida correo y contraseña. En producción debe conectarse a Firebase Auth.</p>
+            <p class="muted-text">Conectada a Firebase Auth. El rol se lee desde Firestore.</p>
           </div>
         </div>
       </section>
@@ -307,6 +304,6 @@
     </div>
   </template>
 
-  <script src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
